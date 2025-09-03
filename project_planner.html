@@ -11,6 +11,10 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            background-image: url('GCC-Sunset-7.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-attachment: fixed;
         }
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
@@ -68,9 +72,14 @@
             background-color: rgba(0,0,0,0.5);
             transition: opacity 0.3s ease-in-out;
         }
+        .content-panel {
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800">
+<body class="text-slate-800">
 
     <!-- API Key Modal -->
     <div id="api-key-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
@@ -98,22 +107,22 @@
 
     <div class="container mx-auto max-w-5xl p-4 sm:p-6 md:p-8">
         <!-- Header -->
-        <header class="text-center mb-8 relative">
+        <header class="text-center mb-8 relative p-6 rounded-xl content-panel shadow-md">
             <h1 class="text-4xl font-bold text-slate-900">Area 59 AI Project Planner</h1>
-            <p class="text-slate-600 mt-2 max-w-3xl mx-auto">Have a project idea, a sketch, or an inspiration photo? Upload an image, add a description, or both! Our AI assistant will instantly generate a detailed project plan to help you get started at the makerspace.</p>
-            <button id="settings-btn" class="absolute top-0 right-0 p-2 text-slate-500 hover:text-slate-800 transition-colors" title="Settings">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <p class="text-slate-700 mt-2 max-w-3xl mx-auto">Have a project idea, a sketch, or an inspiration photo? Upload an image, add a description, or both! Our AI assistant will instantly generate a detailed project plan to help you get started at the makerspace.</p>
+            <button id="settings-btn" class="absolute top-2 right-2 p-2 text-slate-500 hover:text-slate-800 transition-colors" title="Settings">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
         </header>
 
         <main class="space-y-6">
-            <div id="api-key-warning" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
+            <div id="api-key-warning" class="hidden content-panel p-4 rounded-md border-l-4 border-red-500 text-red-700" role="alert">
                 <p class="font-bold">Missing API Key</p>
                 <p>Please <a href="#" id="open-modal-link" class="font-bold underline">set your Google AI API key</a> to enable the project planner.</p>
             </div>
 
             <!-- AI Input Section -->
-            <section class="bg-white p-6 rounded-xl shadow-md">
+            <section class="content-panel p-6 rounded-xl shadow-md">
                 <h2 class="text-2xl font-semibold mb-4 border-b pb-2 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path><path d="M5 3v4"></path><path d="M19 17v4"></path><path d="M3 5h4"></path><path d="M17 19h4"></path></svg>
                     Start Your Plan
@@ -145,7 +154,7 @@
             </section>
 
             <!-- AI-Generated Project Plan Section -->
-            <section id="plan-section" class="bg-white p-6 rounded-xl shadow-md hidden">
+            <section id="plan-section" class="content-panel p-6 rounded-xl shadow-md hidden">
                 <div id="plan-placeholder" class="text-center text-slate-500 py-12">
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-4 text-slate-400"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
                     Your generated project plan will appear here.
@@ -228,9 +237,11 @@
                 </div>
             </section>
         </main>
-        <footer class="text-center mt-8 text-sm text-slate-500">
-            <p>Area 59 Makerspace Planner</p>
-            <a href="admin.html" class="hover:text-blue-600 underline">Admin Login</a>
+        <footer class="text-center mt-8 text-sm text-slate-300 font-medium">
+            <div class="inline-block p-2 rounded-lg content-panel">
+                <p>Area 59 Makerspace Planner</p>
+                <a href="admin.html" class="hover:text-blue-600 underline">Admin Login</a>
+            </div>
         </footer>
     </div>
 
@@ -289,7 +300,28 @@
                 inventoryLoaded = true;
             } catch (error) {
                 console.error("Fatal Error: Could not load inventory.json.", error);
-                document.body.innerHTML = `<div class="p-8 text-center bg-slate-100"><div class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto"><h1 class="text-2xl font-bold text-red-600">Error: Could Not Load Inventory</h1><p class="text-slate-600 mt-2">The makerspace tool inventory file ('inventory.json') could not be found. Please contact an admin to have this file created using the admin panel.</p></div></div>`;
+                document.body.innerHTML = `
+                <div class="p-8 text-center bg-slate-100 min-h-screen flex items-center justify-center">
+                    <div class="bg-white p-8 rounded-lg shadow-md max-w-3xl mx-auto">
+                        <h1 class="text-2xl font-bold text-red-600">Error: Could Not Load Inventory File</h1>
+                        <p class="text-slate-600 mt-4">
+                            This application cannot load the <code>inventory.json</code> file when you open it directly from your computer. This is a standard security feature in web browsers.
+                        </p>
+                        <div class="text-left mt-6">
+                            <h2 class="text-lg font-semibold text-slate-800">To fix this, you need to run it from a web server:</h2>
+                            <ul class="list-disc list-inside mt-2 text-slate-600 space-y-2">
+                                <li>
+                                    <b>Option 1: Deploy to GitHub Pages.</b> Follow the instructions to upload your files to GitHub and enable GitHub Pages. This is the best option for sharing your planner.
+                                </li>
+                                <li>
+                                    <b>Option 2: Use a local server (for testing).</b> If you have Python installed, open a terminal in this project's folder and run the command: 
+                                    <code class="bg-slate-200 p-1 rounded font-mono text-sm">python -m http.server</code>
+                                     Then, open your browser to <a href="http://localhost:8000" class="text-blue-600 underline">http://localhost:8000</a>.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>`;
             }
         }
         
