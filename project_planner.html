@@ -64,18 +64,54 @@
         .skill-beginner { background-color: #dbeafe; color: #1e40af; }
         .skill-intermediate { background-color: #fef3c7; color: #92400e; }
         .skill-advanced { background-color: #fee2e2; color: #991b1b; }
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.5);
+            transition: opacity 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800">
 
+    <!-- API Key Modal -->
+    <div id="api-key-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+        <div id="modal-backdrop" class="modal-backdrop fixed inset-0"></div>
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md z-10 transform transition-all" id="modal-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center pb-3 border-b">
+                    <h3 class="text-xl font-semibold text-slate-900">API Key Required</h3>
+                    <button id="close-modal-btn" class="text-slate-400 hover:text-slate-600">&times;</button>
+                </div>
+                <div class="mt-4">
+                    <p class="text-sm text-slate-600 mb-3">To use the AI features, you need a free Google AI API key. This key will be saved securely in your browser's local storage and will not be shared.</p>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-sm text-blue-600 hover:underline font-medium">Click here to get your API key from Google AI Studio &rarr;</a>
+                    <div class="mt-4">
+                        <label for="api-key-input" class="block text-sm font-medium text-slate-700">Your Google AI API Key</label>
+                        <input type="password" id="api-key-input" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500">
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button id="save-api-key-btn" class="bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm">Save Key</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container mx-auto max-w-5xl p-4 sm:p-6 md:p-8">
         <!-- Header -->
-        <header class="text-center mb-8">
+        <header class="text-center mb-8 relative">
             <h1 class="text-4xl font-bold text-slate-900">Area 59 AI Project Planner</h1>
             <p class="text-slate-600 mt-2 max-w-3xl mx-auto">Have a project idea, a sketch, or an inspiration photo? Upload an image, add a description, or both! Our AI assistant will instantly generate a detailed project plan to help you get started at the makerspace.</p>
+            <button id="settings-btn" class="absolute top-0 right-0 p-2 text-slate-500 hover:text-slate-800 transition-colors" title="Settings">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
         </header>
 
         <main class="space-y-6">
+            <div id="api-key-warning" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
+                <p class="font-bold">Missing API Key</p>
+                <p>Please <a href="#" id="open-modal-link" class="font-bold underline">set your Google AI API key</a> to enable the project planner.</p>
+            </div>
+
             <!-- AI Input Section -->
             <section class="bg-white p-6 rounded-xl shadow-md">
                 <h2 class="text-2xl font-semibold mb-4 border-b pb-2 flex items-center gap-2">
@@ -200,22 +236,69 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
-        // --- Global variable for Makerspace tools ---
         let makerspaceTools = {};
+        let inventoryLoaded = false;
+        let apiKey = '';
 
-        // --- Fetch Makerspace Tools from JSON ---
+        // --- API Key Management ---
+        const apiKeyModal = document.getElementById('api-key-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const apiKeyWarning = document.getElementById('api-key-warning');
+        const openModalLink = document.getElementById('open-modal-link');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+
+        function openModal() { apiKeyModal.classList.remove('hidden'); }
+        function closeModal() { apiKeyModal.classList.add('hidden'); }
+
+        settingsBtn.addEventListener('click', openModal);
+        openModalLink.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
+        closeModalBtn.addEventListener('click', closeModal);
+        modalBackdrop.addEventListener('click', closeModal);
+
+        saveApiKeyBtn.addEventListener('click', () => {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                localStorage.setItem('googleAiApiKey', key);
+                apiKey = key;
+                apiKeyWarning.classList.add('hidden');
+                alert('API Key saved successfully!');
+                closeModal();
+            } else {
+                alert('Please enter a valid API key.');
+            }
+        });
+
+        function loadApiKey() {
+            const savedKey = localStorage.getItem('googleAiApiKey');
+            if (savedKey) {
+                apiKey = savedKey;
+                apiKeyInput.value = savedKey;
+            } else {
+                apiKeyWarning.classList.remove('hidden');
+            }
+        }
+
         async function loadInventory() {
             try {
-                const response = await fetch(`inventory.json?v=${new Date().getTime()}`); // Cache-bust
+                const response = await fetch(`inventory.json?v=${new Date().getTime()}`);
                 if (!response.ok) throw new Error('Network response was not ok');
                 makerspaceTools = await response.json();
+                inventoryLoaded = true;
             } catch (error) {
                 console.error("Fatal Error: Could not load inventory.json.", error);
-                document.body.innerHTML = `<div class="p-8 text-center text-red-600"><h1>Error</h1><p>Could not load the makerspace tool inventory. Please ensure 'inventory.json' is in the same directory and is accessible.</p></div>`;
+                document.body.innerHTML = `<div class="p-8 text-center bg-slate-100"><div class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto"><h1 class="text-2xl font-bold text-red-600">Error: Could Not Load Inventory</h1><p class="text-slate-600 mt-2">The makerspace tool inventory file ('inventory.json') could not be found. Please contact an admin to have this file created using the admin panel.</p></div></div>`;
             }
         }
         
-        await loadInventory(); // Load inventory on page start
+        loadApiKey(); // Load key first
+        await loadInventory(); // Then load inventory
+
+        if (!inventoryLoaded) {
+            return; // Stop script execution if inventory failed to load
+        }
 
         // --- Element Selectors ---
         const userDescriptionInput = document.getElementById('user-description');
@@ -258,6 +341,12 @@
 
         // --- AI Feature Logic ---
         analyzeBtn.addEventListener('click', async () => {
+            if (!apiKey) {
+                showStatus('API Key is missing. Please set it in the settings.', 'error');
+                openModal();
+                return;
+            }
+
             const userText = userDescriptionInput.value.trim();
             if (!uploadedImageBase64 && !userText) {
                 showStatus('Please upload an image or describe your project.', 'error');
@@ -272,7 +361,6 @@
             planPlaceholder.classList.remove('hidden');
             planPlaceholder.textContent = 'AI is analyzing your input and building a plan...';
 
-            const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
             const systemPrompt = `You are an expert project planner for a community makerspace. Your task is to analyze user input (text and/or image) and generate a comprehensive, structured project plan. Be realistic, encouraging, and prioritize safety. Your response MUST be in the specified JSON format.
@@ -326,7 +414,10 @@
             
             try {
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error(`API Error: ${response.statusText} (${response.status})`);
+                if (!response.ok) {
+                    if (response.status === 403) throw new Error("API Error: Invalid API Key or permissions issue. Please check your key in the settings. (403)");
+                    throw new Error(`API Error: ${response.statusText} (${response.status})`);
+                }
                 
                 const result = await response.json();
                 const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
