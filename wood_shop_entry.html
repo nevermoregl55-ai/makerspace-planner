@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area 59 - Wood Shop Project Entry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-image: url('GCC-Sunset-7.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .content-panel {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .login-panel {
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        #main-content { display: none; }
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .image-preview {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            border: 2px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md p-8 space-y-6 rounded-2xl shadow-lg login-panel">
+            <div class="text-center">
+                <img src="Area_59_Logo_Color_3x1.png" alt="Area 59 Logo" class="mx-auto h-16 mb-4">
+                <h1 class="text-2xl font-bold text-slate-900">Project Database Access</h1>
+                <p class="text-slate-600">Enter the admin password to continue.</p>
+            </div>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <input type="password" id="password-input" placeholder="Password" required class="w-full px-4 py-2 text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                </div>
+                <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">Unlock</button>
+            </form>
+            <p id="login-error" class="text-red-500 text-sm text-center hidden">Incorrect password. Please try again.</p>
+            <div class="text-center">
+                <a href="add_project.html" class="text-sm text-blue-600 hover:underline">&larr; Back to Project Type Selection</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-content" class="container mx-auto max-w-4xl p-4 sm:p-6 md:p-8">
+         <div id="error-banner" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6" role="alert">
+            <p class="font-bold">Loading Error</p>
+            <p id="error-message"></p>
+        </div>
+        <header class="text-center mb-8 relative p-6 rounded-xl content-panel shadow-md">
+            <div class="relative">
+                <h1 class="text-4xl font-bold text-slate-900">Wood Shop Project Entry</h1>
+                <p class="text-slate-700 mt-2 max-w-3xl mx-auto">Log a project that used multiple wood shop tools.</p>
+            </div>
+        </header>
+
+        <div class="content-panel p-8 rounded-xl shadow-lg space-y-6">
+            <!-- Project Details -->
+            <div class="space-y-4">
+                <h2 class="text-2xl font-semibold border-b pb-2">Project Details</h2>
+                <div>
+                    <label for="projectName" class="block text-sm font-medium text-slate-700">Project Name</label>
+                    <input type="text" id="projectName" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="projectDescription" class="block text-sm font-medium text-slate-700">Description</label>
+                    <textarea id="projectDescription" rows="4" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                </div>
+                 <div>
+                    <label for="projectMaterial" class="block text-sm font-medium text-slate-700">Material Used</label>
+                    <input type="text" id="projectMaterial" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="e.g., Pine, Walnut, MDF">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700">Dimensions</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-1">
+                        <input type="number" id="dimL" placeholder="Length" class="rounded-md border-slate-300 shadow-sm">
+                        <input type="number" id="dimW" placeholder="Width" class="rounded-md border-slate-300 shadow-sm">
+                        <input type="number" id="dimH" placeholder="Height" class="rounded-md border-slate-300 shadow-sm">
+                         <select id="dimUnit" class="rounded-md border-slate-300 shadow-sm">
+                            <option>inches</option>
+                            <option>mm</option>
+                            <option>cm</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Post-Processing -->
+            <div class="space-y-4 pt-4 border-t">
+                <h3 class="text-2xl font-semibold border-b pb-2">Post-Processing</h3>
+                <div>
+                    <label for="assemblyRequired" class="block text-sm font-medium text-slate-700">Was Assembly / Finishing Required?</label>
+                    <select id="assemblyRequired" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option>No</option>
+                        <option>Yes</option>
+                    </select>
+                </div>
+                <div id="assembly-time-container" class="hidden">
+                    <label class="block text-sm font-medium text-slate-700">Assembly / Finishing Time</label>
+                     <div class="grid grid-cols-2 gap-4 mt-1">
+                        <input type="number" id="assemblyTimeHours" placeholder="Hours" class="rounded-md border-slate-300 shadow-sm">
+                        <input type="number" id="assemblyTimeMinutes" placeholder="Minutes" class="rounded-md border-slate-300 shadow-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Upload -->
+            <div>
+                 <h2 class="text-2xl font-semibold border-b pb-2">Project Images</h2>
+                 <label for="projectImages" class="block text-sm font-medium text-slate-700 mt-4">Upload one or more images</label>
+                 <input type="file" id="projectImages" multiple accept="image/*" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                 <div id="image-previews" class="image-preview-container"></div>
+            </div>
+
+            <!-- Tools Used -->
+            <div>
+                <div class="flex justify-between items-center border-b pb-2">
+                    <h2 class="text-2xl font-semibold">Tools Used</h2>
+                    <button id="add-tool-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition">Add Tool</button>
+                </div>
+                <div id="tools-container" class="space-y-4 mt-4">
+                    <!-- Dynamic tool entries will be added here -->
+                </div>
+            </div>
+
+             <!-- Save Button -->
+            <div class="text-center pt-6">
+                <button id="save-project-btn" class="w-full max-w-xs px-6 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition shadow-lg">Save Project & Download File</button>
+                <p id="save-status" class="text-green-600 mt-4 font-medium hidden"></p>
+            </div>
+        </div>
+    </div>
+
+    <template id="tool-entry-template">
+        <div class="tool-entry-block border p-4 rounded-lg bg-slate-50 relative">
+            <button class="remove-tool-btn absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold">&times;</button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium">Tool</label>
+                    <select class="tool-select mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                        <option>Loading tools...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium">Time Used</label>
+                     <div class="grid grid-cols-2 gap-4 mt-1">
+                        <input type="number" class="tool-time-hours" placeholder="Hours" class="rounded-md border-slate-300 shadow-sm">
+                        <input type="number" class="tool-time-minutes" placeholder="Minutes" class="rounded-md border-slate-300 shadow-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // --- Authentication ---
+        const password = "Pronghorn@59";
+        const loginForm = document.getElementById('login-form');
+        const passwordInput = document.getElementById('password-input');
+        const loginError = document.getElementById('login-error');
+        const loginScreen = document.getElementById('login-screen');
+        const mainContent = document.getElementById('main-content');
+        let woodShopTools = [];
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (passwordInput.value === password) {
+                loginScreen.style.display = 'none';
+                mainContent.style.display = 'block';
+                loadWoodshopTools();
+            } else {
+                loginError.classList.remove('hidden');
+                passwordInput.value = '';
+            }
+        });
+
+        async function loadWoodshopTools() {
+            try {
+                const response = await fetch('inventory.json?v=' + Date.now());
+                if (!response.ok) throw new Error('Could not load inventory file. Make sure it is in the same folder.');
+                const inventory = await response.json();
+                woodShopTools = inventory["Wood Shop"]?.items || [];
+
+                if (woodShopTools.length === 0) {
+                     throw new Error('"Wood Shop" category not found or is empty in inventory.json.');
+                }
+                addToolBlock(); // Add one default block on load
+
+            } catch (error) {
+                console.error(error);
+                const errorBanner = document.getElementById('error-banner');
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.innerHTML = `<strong>${error.message}</strong><br>This form requires a "Wood Shop" category in your <strong>inventory.json</strong> file. Also ensure you are running this from a local web server.`;
+                errorBanner.classList.remove('hidden');
+            }
+        }
+
+
+        // --- Image Previews ---
+        const imageInput = document.getElementById('projectImages');
+        const imagePreviewsContainer = document.getElementById('image-previews');
+        
+        imageInput.addEventListener('change', () => {
+            imagePreviewsContainer.innerHTML = '';
+            const files = imageInput.files;
+            if (files) {
+                Array.from(files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const previewWrapper = document.createElement('div');
+                        previewWrapper.className = 'image-preview';
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        previewWrapper.appendChild(img);
+                        imagePreviewsContainer.appendChild(previewWrapper);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        });
+        
+        // --- Assembly Time Logic ---
+        const assemblyRequiredSelect = document.getElementById('assemblyRequired');
+        const assemblyTimeContainer = document.getElementById('assembly-time-container');
+
+        assemblyRequiredSelect.addEventListener('change', () => {
+            if (assemblyRequiredSelect.value === 'Yes') {
+                assemblyTimeContainer.classList.remove('hidden');
+            } else {
+                assemblyTimeContainer.classList.add('hidden');
+                document.getElementById('assemblyTimeHours').value = '';
+                document.getElementById('assemblyTimeMinutes').value = '';
+            }
+        });
+
+        // --- Dynamic Tool Entry ---
+        const addToolBtn = document.getElementById('add-tool-btn');
+        const toolsContainer = document.getElementById('tools-container');
+        const toolTemplate = document.getElementById('tool-entry-template');
+
+        function addToolBlock() {
+            const newBlock = toolTemplate.content.cloneNode(true);
+            const selectEl = newBlock.querySelector('.tool-select');
+            
+            selectEl.innerHTML = '<option value="">-- Select a Tool --</option>';
+            woodShopTools.forEach(tool => {
+                const option = document.createElement('option');
+                option.value = tool;
+                option.textContent = tool;
+                selectEl.appendChild(option);
+            });
+
+            toolsContainer.appendChild(newBlock);
+        }
+
+        addToolBtn.addEventListener('click', addToolBlock);
+        
+        toolsContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-tool-btn')) {
+                e.target.closest('.tool-entry-block').remove();
+            }
+        });
+
+        // --- Save Project Data ---
+        const saveBtn = document.getElementById('save-project-btn');
+        const saveStatus = document.getElementById('save-status');
+
+        async function getBase64Images(files) {
+            const promises = Array.from(files).map(file => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = error => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            });
+            return Promise.all(promises);
+        }
+
+        saveBtn.addEventListener('click', async () => {
+            saveStatus.classList.add('hidden');
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            
+            try {
+                // 1. Collect Data
+                const images = await getBase64Images(imageInput.files);
+                const toolsUsed = [];
+                let totalMachineTime = 0;
+
+                document.querySelectorAll('.tool-entry-block').forEach(block => {
+                    const tool = block.querySelector('.tool-select').value;
+                    const hours = block.querySelector('.tool-time-hours').value || 0;
+                    const minutes = block.querySelector('.tool-time-minutes').value || 0;
+                    const timeMinutes = parseInt(hours) * 60 + parseInt(minutes);
+                    
+                    if (tool && timeMinutes > 0) {
+                        toolsUsed.push({ tool, timeMinutes });
+                        totalMachineTime += timeMinutes;
+                    }
+                });
+                
+                const assemblyHours = document.getElementById('assemblyTimeHours').value || 0;
+                const assemblyMinutes = document.getElementById('assemblyTimeMinutes').value || 0;
+                const totalAssemblyTime = parseInt(assemblyHours) * 60 + parseInt(assemblyMinutes);
+
+                const newProject = {
+                    id: Date.now().toString(),
+                    type: 'wood-shop',
+                    name: document.getElementById('projectName').value,
+                    description: document.getElementById('projectDescription').value,
+                    material: document.getElementById('projectMaterial').value,
+                    dimensions: {
+                        l: document.getElementById('dimL').value,
+                        w: document.getElementById('dimW').value,
+                        h: document.getElementById('dimH').value,
+                        unit: document.getElementById('dimUnit').value,
+                    },
+                    buildTimeMinutes: totalMachineTime,
+                    assemblyRequired: document.getElementById('assemblyRequired').value,
+                    assemblyTimeMinutes: totalAssemblyTime,
+                    images: images,
+                    toolsUsed: toolsUsed,
+                    dateAdded: new Date().toISOString()
+                };
+
+                // 2. Load existing projects
+                let projects = [];
+                try {
+                    const response = await fetch('projects.json');
+                    if (response.ok) {
+                        projects = await response.json();
+                    }
+                } catch (e) {
+                    console.log("No existing projects.json found, creating a new one.");
+                }
+
+                // 3. Add new project and prepare for download
+                projects.push(newProject);
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projects, null, 2));
+                
+                // 4. Trigger Download
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "projects.json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+
+                saveStatus.textContent = 'Project saved! The "projects.json" file has been downloaded.';
+                saveStatus.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Error saving project:", error);
+                saveStatus.textContent = 'An error occurred. Please check the console.';
+                saveStatus.classList.remove('hidden');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Project & Download File';
+            }
+        });
+    </script>
+</body>
+</html>
