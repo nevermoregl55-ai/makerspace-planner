@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area 59 - Inventory Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-image: url('GCC-Sunset-7.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .content-panel {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .login-panel {
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        #main-content { display: none; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md p-8 space-y-6 rounded-2xl shadow-lg login-panel">
+            <div class="text-center">
+                <img src="Area_59_Logo_Color_3x1.png" alt="Area 59 Logo" class="mx-auto h-16 mb-4">
+                <h1 class="text-2xl font-bold text-slate-900">Inventory Access</h1>
+                <p class="text-slate-600">Enter the admin password to continue.</p>
+            </div>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <input type="password" id="password-input" placeholder="Password" required class="w-full px-4 py-2 text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                </div>
+                <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">Unlock</button>
+            </form>
+            <p id="login-error" class="text-red-500 text-sm text-center hidden">Incorrect password. Please try again.</p>
+             <div class="text-center">
+                <a href="admin.html" class="text-sm text-blue-600 hover:underline">&larr; Back to Admin Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-content" class="container mx-auto max-w-5xl p-4 sm:p-6 md:p-8">
+        <div id="error-banner" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6" role="alert">
+            <p class="font-bold">Loading Error</p>
+            <p id="error-message"></p>
+        </div>
+
+        <header class="text-center mb-8 relative p-6 rounded-xl content-panel shadow-md">
+            <h1 class="text-4xl font-bold text-slate-900">Inventory Management</h1>
+            <p class="text-slate-700 mt-2 max-w-3xl mx-auto">Add, remove, and update the equipment and software available at Area 59.</p>
+        </header>
+
+        <div id="inventory-container" class="space-y-6">
+            <!-- Categories will be loaded here -->
+        </div>
+
+        <div class="mt-8 content-panel p-6 rounded-xl shadow-md">
+            <h3 class="text-xl font-semibold mb-4">Add New Category</h3>
+            <div class="flex gap-4">
+                <input type="text" id="new-category-name" placeholder="Category Name" class="flex-grow w-full px-4 py-2 text-slate-900 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                <button id="add-category-btn" class="px-5 py-2 font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition">Add</button>
+            </div>
+        </div>
+        
+        <div class="mt-8 text-center">
+             <button id="save-inventory-btn" class="w-full max-w-xs px-6 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition shadow-lg">Save & Download Updated inventory.json</button>
+             <p id="save-status" class="text-green-600 mt-4 font-medium hidden"></p>
+        </div>
+    </div>
+
+    <script>
+        const password = "Pronghorn@59";
+        const loginForm = document.getElementById('login-form');
+        const passwordInput = document.getElementById('password-input');
+        const loginError = document.getElementById('login-error');
+        const loginScreen = document.getElementById('login-screen');
+        const mainContent = document.getElementById('main-content');
+        let inventoryData = {};
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (passwordInput.value === password) {
+                loginScreen.style.display = 'none';
+                mainContent.style.display = 'block';
+                loadInventory();
+            } else {
+                loginError.classList.remove('hidden');
+                passwordInput.value = '';
+            }
+        });
+
+        const inventoryContainer = document.getElementById('inventory-container');
+        const errorBanner = document.getElementById('error-banner');
+        const errorMessage = document.getElementById('error-message');
+
+        async function loadInventory() {
+            try {
+                const response = await fetch('inventory.json?v=' + Date.now());
+                if (response.ok) {
+                    inventoryData = await response.json();
+                } else {
+                    throw new Error('File not found');
+                }
+            } catch (error) {
+                console.warn("inventory.json not found. Creating a default structure.");
+                inventoryData = {
+                    "Software": {
+                        "items": ["Adobe Illustrator", "Adobe Photoshop", "Blender", "SolidWorks", "VCarve"]
+                    },
+                    "3D Printing & Scanning": {
+                        "items": ["Bambu Lab P1S (FDM)", "Formlabs Form 3+ (SLA)", "3D Scanner"]
+                    }
+                };
+                errorMessage.innerHTML = `<strong>inventory.json</strong> was not found. A default file has been created for you. Please review and click "Save & Download" to create your file.`;
+                errorBanner.classList.remove('hidden');
+            }
+            renderInventory();
+        }
+
+        function renderInventory() {
+            inventoryContainer.innerHTML = '';
+            for (const category in inventoryData) {
+                const categoryEl = createCategoryElement(category, inventoryData[category].items);
+                inventoryContainer.appendChild(categoryEl);
+            }
+        }
+        
+        function createCategoryElement(categoryName, items) {
+            const div = document.createElement('div');
+            div.className = 'content-panel p-6 rounded-xl shadow-md';
+            div.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">${categoryName}</h2>
+                    <button class="remove-category-btn text-red-500 hover:text-red-700 font-bold text-2xl" data-category="${categoryName}">&times;</button>
+                </div>
+                <ul class="list-disc list-inside space-y-2 mb-4">
+                    ${items.map(item => `
+                        <li class="flex justify-between items-center">
+                            <span>${item}</span>
+                            <button class="remove-item-btn text-red-500 hover:text-red-700 font-bold" data-category="${categoryName}" data-item="${item}">&times;</button>
+                        </li>
+                    `).join('')}
+                </ul>
+                <div class="flex gap-4">
+                    <input type="text" class="new-item-input flex-grow w-full px-4 py-2 text-slate-900 bg-white border border-slate-300 rounded-lg" placeholder="New Item Name">
+                    <button class="add-item-btn px-5 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700" data-category="${categoryName}">Add Item</button>
+                </div>
+            `;
+            return div;
+        }
+
+        document.getElementById('add-category-btn').addEventListener('click', () => {
+            const newCategoryName = document.getElementById('new-category-name').value.trim();
+            if (newCategoryName && !inventoryData[newCategoryName]) {
+                inventoryData[newCategoryName] = { items: [] };
+                document.getElementById('new-category-name').value = '';
+                renderInventory();
+            }
+        });
+
+        inventoryContainer.addEventListener('click', (e) => {
+            const target = e.target;
+            const category = target.dataset.category;
+
+            if (target.classList.contains('add-item-btn')) {
+                const input = target.previousElementSibling;
+                const newItem = input.value.trim();
+                if (newItem && category) {
+                    inventoryData[category].items.push(newItem);
+                    input.value = '';
+                    renderInventory();
+                }
+            } else if (target.classList.contains('remove-item-btn')) {
+                const itemToRemove = target.dataset.item;
+                if (category && itemToRemove) {
+                    inventoryData[category].items = inventoryData[category].items.filter(item => item !== itemToRemove);
+                    renderInventory();
+                }
+            } else if (target.classList.contains('remove-category-btn')) {
+                if (category) {
+                    delete inventoryData[category];
+                    renderInventory();
+                }
+            }
+        });
+
+        document.getElementById('save-inventory-btn').addEventListener('click', () => {
+            const saveBtn = document.getElementById('save-inventory-btn');
+            const saveStatus = document.getElementById('save-status');
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(inventoryData, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "inventory.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            
+            saveStatus.textContent = 'Success! Your inventory.json file has been downloaded.';
+            saveStatus.classList.remove('hidden');
+            setTimeout(() => saveStatus.classList.add('hidden'), 4000);
+        });
+    </script>
+</body>
+</html>
