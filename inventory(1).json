@@ -1,0 +1,46 @@
+{
+  "3D Printing & Scanning": [
+    "Bambu Lab P1S (FDM)",
+    "Formlabs Form 3 (SLA)",
+    "3D Scanner (Artec Leo)"
+  ],
+  "Laser Cutting & Engraving": [
+    "Universal Laser System (x2)",
+    "Universal Laser System with Rotary"
+  ],
+  "CNC Machining": [
+    "CNC Mill (Tormach PCNC 440)",
+    "Wood Router 24\" by 36\" (x2)",
+    "Wood Router 48\" by 96\"  ATC"
+  ],
+  "Wood Shop": [
+    "Table Saw",
+    "Miter Saw",
+    "Band Saw",
+    "Drill Press",
+    "Jointer",
+    "Planer",
+    "Lathe",
+    "Router Table",
+    "Sanders (Belt/Disc)"
+  ],
+  "Electronics": [
+    "Soldering Station",
+    "Oscilloscope",
+    "Function Generator",
+    "Bench Power Supply",
+    "Multimeter"
+  ],
+  "Textiles": [
+    "Vinyl Cutter",
+    "Heat Press"
+  ],
+  "Software": [
+    "Adobe Illustrator",
+    "Adobe Photoshop",
+    "Blender",
+    "SolidWorks",
+    "VCarve"
+  ],
+  "Inventory": []
+}
