@@ -71,58 +71,97 @@
         </div>
         
         <div class="mt-8 text-center">
-             <button id="save-inventory-btn" class="w-full max-w-xs px-6 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition shadow-lg">Save & Download Updated inventory.json</button>
+             <button id="save-inventory-btn" class="w-full max-w-xs px-6 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition shadow-lg">Save Changes to Database</button>
              <p id="save-status" class="text-green-600 mt-4 font-medium hidden"></p>
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // --- Global Variables & Firebase Setup ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        let db, auth, inventoryDocRef;
+
+        if (Object.keys(firebaseConfig).length > 0) {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+        }
+
+        // --- DOM Elements ---
         const password = "Pronghorn@59";
         const loginForm = document.getElementById('login-form');
         const passwordInput = document.getElementById('password-input');
         const loginError = document.getElementById('login-error');
         const loginScreen = document.getElementById('login-screen');
         const mainContent = document.getElementById('main-content');
-        let inventoryData = {};
-
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (passwordInput.value === password) {
-                loginScreen.style.display = 'none';
-                mainContent.style.display = 'block';
-                loadInventory();
-            } else {
-                loginError.classList.remove('hidden');
-                passwordInput.value = '';
-            }
-        });
-
         const inventoryContainer = document.getElementById('inventory-container');
         const errorBanner = document.getElementById('error-banner');
         const errorMessage = document.getElementById('error-message');
+        
+        let inventoryData = {};
 
+        // --- Authentication ---
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (passwordInput.value !== password) {
+                loginError.classList.remove('hidden');
+                passwordInput.value = '';
+                return;
+            }
+
+            if (!db) {
+                showError("Firebase is not configured. Please ensure the app is running in the correct environment.");
+                return;
+            }
+            
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                const userId = auth.currentUser?.uid;
+                if (!userId) throw new Error("Authentication failed.");
+
+                inventoryDocRef = doc(db, `/artifacts/${appId}/public/data/inventory/main`);
+                
+                loginScreen.style.display = 'none';
+                mainContent.style.display = 'block';
+                loadInventory();
+
+            } catch (err) {
+                console.error("Authentication or Initialization Error:", err);
+                showError("Could not connect to the database. Please check your connection and configuration.");
+            }
+        });
+
+        // --- Data Handling ---
         async function loadInventory() {
             try {
-                const response = await fetch('inventory.json?v=' + Date.now());
-                if (response.ok) {
-                    inventoryData = await response.json();
+                const docSnap = await getDoc(inventoryDocRef);
+
+                if (docSnap.exists()) {
+                    inventoryData = docSnap.data().data;
                 } else {
-                    throw new Error('File not found');
+                    console.warn("Inventory document not found. Creating a default structure.");
+                    inventoryData = {
+                        "Software": { "items": ["Adobe Illustrator", "Adobe Photoshop", "Blender", "SolidWorks", "VCarve"] },
+                        "3D Printing & Scanning": { "items": ["Bambu Lab P1S (FDM)", "Formlabs Form 3+ (SLA)", "3D Scanner"] },
+                        "Wood Shop": { "items": ["Table Saw", "Miter Saw", "Band Saw", "Drill Press", "Lathe", "Planer", "Jointer", "Router Table", "Belt Sander"] }
+                    };
+                    showError('No inventory found in the database. A default list has been created. Click "Save Changes" to initialize it.');
                 }
+                renderInventory();
             } catch (error) {
-                console.warn("inventory.json not found. Creating a default structure.");
-                inventoryData = {
-                    "Software": {
-                        "items": ["Adobe Illustrator", "Adobe Photoshop", "Blender", "SolidWorks", "VCarve"]
-                    },
-                    "3D Printing & Scanning": {
-                        "items": ["Bambu Lab P1S (FDM)", "Formlabs Form 3+ (SLA)", "3D Scanner"]
-                    }
-                };
-                errorMessage.innerHTML = `<strong>inventory.json</strong> was not found. A default file has been created for you. Please review and click "Save & Download" to create your file.`;
-                errorBanner.classList.remove('hidden');
+                console.error("Error loading inventory from Firestore:", error);
+                showError("Could not load inventory from the database.");
             }
-            renderInventory();
         }
 
         function renderInventory() {
@@ -142,7 +181,7 @@
                     <button class="remove-category-btn text-red-500 hover:text-red-700 font-bold text-2xl" data-category="${categoryName}">&times;</button>
                 </div>
                 <ul class="list-disc list-inside space-y-2 mb-4">
-                    ${items.map(item => `
+                    ${(items || []).map(item => `
                         <li class="flex justify-between items-center">
                             <span>${item}</span>
                             <button class="remove-item-btn text-red-500 hover:text-red-700 font-bold" data-category="${categoryName}" data-item="${item}">&times;</button>
@@ -157,6 +196,7 @@
             return div;
         }
 
+        // --- Event Listeners ---
         document.getElementById('add-category-btn').addEventListener('click', () => {
             const newCategoryName = document.getElementById('new-category-name').value.trim();
             if (newCategoryName && !inventoryData[newCategoryName]) {
@@ -174,6 +214,9 @@
                 const input = target.previousElementSibling;
                 const newItem = input.value.trim();
                 if (newItem && category) {
+                    if (!inventoryData[category].items) {
+                        inventoryData[category].items = [];
+                    }
                     inventoryData[category].items.push(newItem);
                     input.value = '';
                     renderInventory();
@@ -192,22 +235,32 @@
             }
         });
 
-        document.getElementById('save-inventory-btn').addEventListener('click', () => {
+        document.getElementById('save-inventory-btn').addEventListener('click', async () => {
             const saveBtn = document.getElementById('save-inventory-btn');
             const saveStatus = document.getElementById('save-status');
-
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(inventoryData, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "inventory.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
             
-            saveStatus.textContent = 'Success! Your inventory.json file has been downloaded.';
-            saveStatus.classList.remove('hidden');
-            setTimeout(() => saveStatus.classList.add('hidden'), 4000);
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+
+            try {
+                await setDoc(inventoryDocRef, { data: inventoryData });
+                saveStatus.textContent = 'Success! Inventory has been saved to the database.';
+                saveStatus.classList.remove('hidden');
+                setTimeout(() => saveStatus.classList.add('hidden'), 4000);
+            } catch (error) {
+                console.error("Error saving inventory to Firestore:", error);
+                showError("Failed to save inventory. Check the console for details.");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Changes to Database';
+            }
         });
+        
+        function showError(message) {
+             errorMessage.textContent = message;
+             errorBanner.classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
+
