@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area 59 - Approve Appointments</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 text-slate-800">
+    <div class="container mx-auto p-4 sm:p-6 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-slate-900">Appointment Approval Queue</h1>
+            <p class="text-slate-600 mt-2">Review and approve new machine time requests.</p>
+            <a href="admin.html" class="text-blue-600 hover:underline mt-4 inline-block font-medium">&larr; Back to Admin Dashboard</a>
+        </header>
+
+        <div id="loading" class="text-center"><p class="text-lg font-semibold">Loading...</p></div>
+        <div id="appointments-container" class="space-y-4"></div>
+        <div id="no-appointments" class="hidden text-center bg-white p-8 rounded-lg shadow-md">
+            <p class="text-xl font-semibold">No pending appointments!</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            /* PASTE YOUR FIREBASE CONFIG OBJECT HERE */
+        };
+
+        let db;
+
+        async function initialize() {
+            // ... (same as before)
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                const auth = getAuth(app);
+                await signInAnonymously(auth);
+                loadPendingAppointments();
+            } catch(e) { console.error(e) }
+        }
+
+        async function loadPendingAppointments() {
+            const container = document.getElementById('appointments-container');
+            // ... (same as before)
+
+            querySnapshot.forEach((doc) => {
+                const request = { id: doc.id, ...doc.data() };
+                const card = createRequestCard(request);
+                container.appendChild(card);
+            });
+        }
+
+        function createRequestCard(request) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg shadow p-6 flex flex-wrap items-center justify-between gap-4';
+            
+            const date = new Date(request.date + 'T' + request.timeSlot);
+            const formattedDate = date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+            
+            // Differentiate between Member and Non-Member
+            const typeBadge = request.requestType === 'Non-Member' 
+                ? `<span class="text-xs bg-purple-200 text-purple-800 font-semibold px-2 py-1 rounded-full ml-2">Non-Member</span>`
+                : `<span class="text-xs bg-blue-200 text-blue-800 font-semibold px-2 py-1 rounded-full ml-2">Member</span>`;
+
+            card.innerHTML = `
+                <div>
+                    <p class="font-bold text-lg">${request.machine}${typeBadge}</p>
+                    <p>${request.userName} (<a href="mailto:${request.userEmail}" class="text-blue-600 hover:underline">${request.userEmail}</a>)</p>
+                    <p class="text-sm text-slate-500">${formattedDate} @ ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <p class="text-slate-700 italic">"${request.projectDetails || 'No details provided'}"</p>
+                </div>
+                <div class="flex gap-4">
+                    <button class="deny-btn px-4 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700" data-id="${request.id}">Deny</button>
+                    <button class="approve-btn px-4 py-2 font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">Approve</button>
+                </div>
+            `;
+            
+            // ... (event listeners same as before)
+            card.querySelector('.approve-btn').addEventListener('click', () => approveRequest(request));
+            card.querySelector('.deny-btn').addEventListener('click', (e) => denyRequest(e.target.dataset.id));
+
+            return card;
+        }
+
+        async function approveRequest(request) {
+            // ... (same as before, using addDoc for public collection)
+            try {
+                await addDoc(collection(db, "public_appointments"), request);
+                await deleteDoc(doc(db, "pending_appointments", request.id));
+                
+                // ... Google Calendar logic ...
+                
+                window.open(gcalUrl.toString(), '_blank');
+                loadPendingAppointments();
+            } catch (error) {
+                console.error("Error approving request: ", error);
+                alert('Failed to approve request.');
+            }
+        }
+
+        async function denyRequest(requestId) {
+            // ... (same as before)
+        }
+
+        initialize();
+    </script>
+</body>
+</html>
+

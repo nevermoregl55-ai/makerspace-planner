@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area 59 - Project Gallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f1f5f9; }
+        .gallery-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .gallery-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+    <div id="app" class="container mx-auto p-4 sm:p-6 md:p-8">
+        <header class="text-center mb-8">
+            <img src="Area_59_Logo_Color_3x1.png" alt="Area 59 Logo" class="mx-auto h-20 mb-4">
+            <h1 class="text-4xl font-bold text-slate-900">Project Gallery</h1>
+            <p class="text-slate-600 mt-2">Browse projects made by members at Area 59.</p>
+        </header>
+
+        <div id="loading" class="text-center">
+            <p class="text-lg font-semibold">Loading projects...</p>
+        </div>
+
+        <div id="gallery-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <!-- Projects will be loaded here -->
+        </div>
+         <div id="no-projects" class="hidden text-center bg-white p-8 rounded-lg shadow-md">
+            <p class="text-xl font-semibold text-slate-700">No projects have been published yet. Check back soon!</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            /* PASTE YOUR FIREBASE CONFIG OBJECT HERE */
+        };
+        
+        async function initialize() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+                loadProjects(db);
+            } catch (error) {
+                 console.error("Firebase Initialization Error:", error);
+                document.getElementById('loading').textContent = 'Error: Could not connect to the database.';
+            }
+        }
+        
+        async function loadProjects(db) {
+            const container = document.getElementById('gallery-container');
+            const loadingEl = document.getElementById('loading');
+            const noProjectsEl = document.getElementById('no-projects');
+
+            try {
+                const q = query(collection(db, "projects"), where("approved", "==", true));
+                const querySnapshot = await getDocs(q);
+                loadingEl.style.display = 'none';
+
+                if(querySnapshot.empty){
+                    noProjectsEl.classList.remove('hidden');
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const project = doc.data();
+                    const card = document.createElement('a');
+                    card.href = `project_details.html?id=${project.id}`;
+                    card.className = 'gallery-card bg-white rounded-lg shadow-md overflow-hidden block';
+                    card.innerHTML = `
+                        <img src="${project.images[0] || 'https://placehold.co/600x400/e2e8f0/475569?text=Project+Image'}" alt="${project.name}" class="w-full h-48 object-cover">
+                        <div class="p-4">
+                            <h3 class="text-lg font-bold truncate">${project.name}</h3>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error("Error fetching projects: ", error);
+                loadingEl.textContent = 'Failed to load projects. Check console for errors.';
+            }
+        }
+        
+        initialize();
+    </script>
+</body>
+</html>
