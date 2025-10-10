@@ -33,7 +33,9 @@
                  <input type="hidden" id="request-date">
                  <div>
                     <label for="machine-select" class="block text-sm font-medium">Machine</label>
-                    <select id="machine-select" required class="mt-1 block w-full rounded-md border-slate-300"></select>
+                    <select id="machine-select" required class="mt-1 block w-full rounded-md border-slate-300">
+                        <option>Loading inventory...</option>
+                    </select>
                  </div>
                  <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -86,12 +88,14 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
+        // Corrected Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyA30A5Qh43IVxy0ZJnVTW9rtvYZG7Cp8-s",
             authDomain: "area-59-makerspace.firebaseapp.com",
             projectId: "area-59-makerspace",
-            storageBucket: "area-59-makerspace.appspot.com",
+            storageBucket: "area-59-makerspace.firebasestorage.app",
             messagingSenderId: "721728366959",
             appId: "1:721728366959:web:8a6513baa852e5699b609a",
             measurementId: "G-8RFF3XJWFL"
@@ -103,10 +107,19 @@
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
+                const auth = getAuth(app);
+                await signInAnonymously(auth); // Needed for security rules
+                
                 await Promise.all([loadAppointments(), loadInventory(), loadWalkInHours()]);
+                
                 populateMachineSelect();
                 renderCalendar();
-            } catch (error) { console.error("Firebase Init Error:", error); }
+            } catch (error) { 
+                console.error("Firebase Init Error:", error); 
+                document.getElementById('calendar').innerHTML = `<p class="text-red-500 col-span-7 text-center p-4">Could not connect to the scheduling service. Please try again later.</p>`;
+                const select = document.getElementById('machine-select');
+                select.innerHTML = '<option disabled>Error loading machines.</option>';
+            }
         }
 
         async function loadAppointments() {
@@ -118,10 +131,15 @@
         async function loadInventory() {
             const docRef = doc(db, "inventory", "main");
             const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) inventory = docSnap.data().data;
+            if (docSnap.exists()) {
+                inventory = docSnap.data().data;
+            } else {
+                console.warn("Inventory document not found in database.");
+            }
         }
         
          async function loadWalkInHours() {
+            walkInHours = [];
             const docRef = doc(db, "walk_in_hours", "schedule");
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) walkInHours = docSnap.data().hours;
@@ -130,8 +148,16 @@
         function populateMachineSelect() {
             const select = document.getElementById('machine-select');
             select.innerHTML = '';
+            
+            const hasInventory = Object.keys(inventory).length > 0;
+            if (!hasInventory) {
+                select.innerHTML = '<option disabled>No machines found in inventory.</option>';
+                return;
+            }
+
             for (const category in inventory) {
-                const items = inventory[category].items || inventory[category].machines || [];
+                // Check for machines array first, then fall back to items array
+                const items = inventory[category].machines || inventory[category].items || [];
                 if (items.length > 0) {
                     const optgroup = document.createElement('optgroup');
                     optgroup.label = category;
@@ -147,7 +173,6 @@
         }
         
         function renderCalendar() {
-            // (Same renderCalendar logic as before, but with walk-in hours)
             const calendarEl = document.getElementById('calendar');
             calendarEl.innerHTML = '';
             
@@ -182,6 +207,7 @@
                 }
 
                 const dayAppts = appointments.filter(a => a.date === todayStr);
+                dayAppts.sort((a,b) => a.startTime.localeCompare(b.startTime));
                 dayAppts.forEach(appt => {
                     const apptDiv = document.createElement('div');
                     apptDiv.className = 'timeslot approved';
@@ -200,7 +226,7 @@
             const dayEl = e.target.closest('.calendar-day');
             if (dayEl) {
                 const day = dayEl.dataset.day;
-                const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), parseInt(day));
                 document.getElementById('request-date').value = date.toISOString().split('T')[0];
                 modal.style.display = 'flex';
             }
