@@ -13,10 +13,17 @@
             background-attachment: fixed;
         }
         .content-panel, .login-panel {
-            background-color: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
         }
         #main-content { display: none; }
+        .dashboard-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -29,56 +36,57 @@
                 <p class="text-slate-600">Enter the admin password to continue.</p>
             </div>
             <form id="login-form" class="space-y-4">
-                <input type="password" id="password-input" placeholder="Password" required class="w-full px-4 py-2 rounded-lg border-slate-300">
-                <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Unlock</button>
+                <div>
+                    <input type="password" id="password-input" placeholder="Password" required class="w-full px-4 py-2 text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
+                </div>
+                <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">Unlock</button>
             </form>
-            <p id="login-error" class="text-red-500 text-sm text-center hidden">Incorrect password.</p>
+            <p id="login-error" class="text-red-500 text-sm text-center hidden">Incorrect password or connection error.</p>
         </div>
     </div>
 
-    <div id="main-content" class="container mx-auto max-w-6xl p-4 sm:p-6 md:p-8">
+    <div id="main-content" class="container mx-auto max-w-4xl p-4 sm:p-6 md:p-8">
         <header class="text-center mb-8 p-6 rounded-xl content-panel shadow-md">
             <h1 class="text-4xl font-bold text-slate-900">Admin Dashboard</h1>
-            <a href="index.html" class="text-blue-600 hover:underline mt-2 inline-block">View Main Hub &rarr;</a>
+            <p class="text-slate-700 mt-2">Select a task to continue.</p>
+            <a href="project_planner.html" class="text-blue-600 hover:underline mt-4 inline-block font-medium">View Public Project Planner &rarr;</a>
         </header>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Left Column: Management Links -->
-            <div class="p-8 rounded-2xl shadow-lg content-panel">
-                <h2 class="text-2xl font-bold text-slate-800 mb-4">Management</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <a href="inventory.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
-                        <h3 class="font-bold">Manage Inventory</h3>
-                        <p class="text-sm text-slate-600">Edit tools and materials.</p>
-                    </a>
-                    <a href="add_project.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
-                        <h3 class="font-bold">Add a Project</h3>
-                        <p class="text-sm text-slate-600">Log a new project.</p>
-                    </a>
-                    <a href="approve_projects.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
-                        <h3 class="font-bold">Approve Projects</h3>
-                        <p class="text-sm text-slate-600">Publish projects to the gallery.</p>
-                    </a>
-                    <a href="approve_appointments.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
-                        <h3 class="font-bold">Approve Appointments</h3>
-                        <p class="text-sm text-slate-600">Review new machine requests.</p>
-                    </a>
-                    <a href="add_class.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
-                        <h3 class="font-bold">Add a Class/Event</h3>
-                        <p class="text-sm text-slate-600">Post a new class to the public calendar.</p>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Right Column: Walk-in Hours -->
-            <div class="p-8 rounded-2xl shadow-lg content-panel">
-                <h2 class="text-2xl font-bold text-slate-800 mb-4">Set Walk-in Hours</h2>
-                <p class="text-sm text-slate-600 mb-4">Select days and times to be open for walk-ins. This will block off these times on the public calendar. The schedule covers the next 14 days.</p>
-                <div id="walk-in-schedule-container" class="space-y-3">
-                    <!-- Dates will be populated by JS -->
-                </div>
-                <button id="save-walk-in-hours-btn" class="mt-6 w-full px-4 py-2 font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">Save Walk-in Schedule</button>
-                <p id="save-status" class="text-center mt-2 text-green-700 font-semibold"></p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <a href="inventory.html" class="dashboard-card block p-8 rounded-2xl shadow-lg bg-white/80">
+                <h2 class="text-2xl font-bold text-slate-800">Manage Inventory</h2>
+                <p class="mt-2 text-slate-600">Update the list of available machines, materials, and software.</p>
+            </a>
+            <a href="approve_projects.html" class="dashboard-card block p-8 rounded-2xl shadow-lg bg-white/80">
+                <h2 class="text-2xl font-bold text-slate-800">Approve Projects</h2>
+                <p class="mt-2 text-slate-600">Review and publish new projects to the public gallery.</p>
+            </a>
+             <a href="add_project.html" class="dashboard-card block p-8 rounded-2xl shadow-lg bg-white/80">
+                <h2 class="text-2xl font-bold text-slate-800">Add a Project</h2>
+                <p class="mt-2 text-slate-600">Log a completed project into the database approval queue.</p>
+            </a>
+            <a href="approve_appointments.html" class="dashboard-card block p-8 rounded-2xl shadow-lg bg-white/80">
+                <h2 class="text-2xl font-bold text-slate-800">Approve Appointments</h2>
+                <p class="mt-2 text-slate-600">Manage pending appointment requests from members and non-members.</p>
+            </a>
+             <a href="add_class.html" class="dashboard-card block p-8 rounded-2xl shadow-lg bg-white/80">
+                <h2 class="text-2xl font-bold text-slate-800">Add a Class</h2>
+                <p class="mt-2 text-slate-600">Add a new class or event to the public calendar.</p>
+            </a>
+            <div class="dashboard-card p-8 rounded-2xl shadow-lg bg-white/80">
+                <h2 class="text-2xl font-bold text-slate-800">Set Walk-in Hours</h2>
+                <p class="mt-2 text-slate-600 mb-4">Set recurring open shop hours for the next two weeks.</p>
+                <form id="walk-in-form" class="space-y-3">
+                    <select id="day-of-week" class="w-full p-2 rounded-md border-slate-300">
+                        <option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option>
+                    </select>
+                    <div class="flex gap-2">
+                        <input type="time" id="start-time" required class="w-full p-2 rounded-md border-slate-300">
+                        <input type="time" id="end-time" required class="w-full p-2 rounded-md border-slate-300">
+                    </div>
+                    <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-green-600 rounded-lg">Set Hours</button>
+                </form>
+                <p id="walk-in-status" class="text-sm text-center mt-2 h-4"></p>
             </div>
         </div>
     </div>
@@ -88,7 +96,7 @@
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Your web app's Firebase configuration
+        // Cleaned Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyA30A5Qh43IVxy0ZJnVTW9rtvYZG7Cp8-s",
             authDomain: "area-59-makerspace.firebaseapp.com",
@@ -99,91 +107,81 @@
             measurementId: "G-8RFF3XJWFL"
         };
         
-        let db, auth;
+        let db;
 
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (document.getElementById('password-input').value === "Pronghorn@59") {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-                await initializeFirebase();
-                generateDatePickers();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        });
+        const password = "Pronghorn@59";
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
 
         async function initializeFirebase() {
-             try {
+            try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
-                auth = getAuth(app);
+                const auth = getAuth(app);
                 await signInAnonymously(auth);
-            } catch (e) {
-                console.error("Firebase Error", e);
-                alert("Could not connect to Firebase. Check console.");
+                return true;
+            } catch (error) {
+                console.error("Firebase Initialization Error:", error);
+                loginError.textContent = "Could not connect to Firebase. Check console.";
+                loginError.classList.remove('hidden');
+                return false;
             }
         }
 
-        function generateDatePickers() {
-            const container = document.getElementById('walk-in-schedule-container');
-            container.innerHTML = '';
-            for (let i = 0; i < 14; i++) {
-                const date = new Date();
-                date.setDate(date.getDate() + i);
-                const dateString = date.toISOString().split('T')[0];
-                const formattedDate = date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loginError.classList.add('hidden');
 
-                const row = document.createElement('div');
-                row.className = 'grid grid-cols-4 items-center gap-2 p-2 rounded-md bg-white/60';
-                row.innerHTML = `
-                    <div class="col-span-2 flex items-center">
-                        <input type="checkbox" id="date-${i}" data-date="${dateString}" class="h-4 w-4 rounded mr-3">
-                        <label for="date-${i}" class="font-medium">${formattedDate}</label>
-                    </div>
-                    <input type="time" class="time-start border-slate-300 rounded-md shadow-sm" value="10:00">
-                    <input type="time" class="time-end border-slate-300 rounded-md shadow-sm" value="16:00">
-                `;
-                container.appendChild(row);
-            }
-        }
-
-        document.getElementById('save-walk-in-hours-btn').addEventListener('click', async () => {
-            if (!db) {
-                alert("Firebase is not initialized.");
+            if (document.getElementById('password-input').value !== password) {
+                loginError.textContent = "Incorrect password.";
+                loginError.classList.remove('hidden');
                 return;
             }
-            
-            const schedule = [];
-            document.querySelectorAll('#walk-in-schedule-container > div').forEach(row => {
-                const checkbox = row.querySelector('input[type="checkbox"]');
-                if (checkbox.checked) {
-                    schedule.push({
-                        date: checkbox.dataset.date,
-                        startTime: row.querySelector('.time-start').value,
-                        endTime: row.querySelector('.time-end').value,
-                    });
-                }
-            });
 
-            const saveBtn = document.getElementById('save-walk-in-hours-btn');
-            const saveStatus = document.getElementById('save-status');
-            saveBtn.disabled = true;
-            saveBtn.textContent = 'Saving...';
-            
-            try {
-                const scheduleRef = doc(db, 'walk_in_hours', 'schedule');
-                await setDoc(scheduleRef, { hours: schedule });
-                saveStatus.textContent = 'Walk-in hours saved successfully!';
-                setTimeout(() => saveStatus.textContent = '', 4000);
-            } catch (e) {
-                console.error("Error saving walk-in hours:", e);
-                saveStatus.textContent = 'Error saving. Check console.';
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.textContent = 'Save Walk-in Schedule';
+            const connected = await initializeFirebase();
+            if (connected) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
             }
         });
+
+        // Walk-in hours form logic
+        const walkInForm = document.getElementById('walk-in-form');
+        walkInForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const statusEl = document.getElementById('walk-in-status');
+            statusEl.textContent = 'Saving...';
+
+            const dayOfWeek = parseInt(document.getElementById('day-of-week').value);
+            const startTime = document.getElementById('start-time').value;
+            const endTime = document.getElementById('end-time').value;
+
+            const hours = [];
+            const today = new Date();
+            for (let i = 0; i < 14; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                if (date.getDay() === dayOfWeek) {
+                    hours.push({
+                        date: date.toISOString().split('T')[0],
+                        startTime,
+                        endTime
+                    });
+                }
+            }
+
+            try {
+                const walkInDocRef = doc(db, 'walk_in_hours', 'schedule');
+                await setDoc(walkInDocRef, { hours });
+                statusEl.textContent = 'Walk-in hours saved!';
+            } catch (error) {
+                console.error("Error saving walk-in hours:", error);
+                statusEl.textContent = 'Error saving. Check console.';
+            } finally {
+                setTimeout(() => statusEl.textContent = '', 4000);
+            }
+        });
+
     </script>
 </body>
 </html>
