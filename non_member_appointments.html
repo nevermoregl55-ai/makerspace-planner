@@ -13,8 +13,8 @@
             background-attachment: fixed;
         }
         .content-panel {
-            background-color: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
         }
     </style>
 </head>
@@ -22,135 +22,116 @@
     <div class="min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-lg p-8 space-y-6 rounded-2xl shadow-lg content-panel">
             <div class="text-center">
-                <img src="Area_59_Logo_Color_3x1.png" alt="Area 59 Logo" class="mx-auto h-16 mb-4">
+                <a href="index.html"><img src="Area_59_Logo_Color_3x1.png" alt="Area 59 Logo" class="mx-auto h-16 mb-4"></a>
                 <h1 class="text-3xl font-bold text-slate-900">Non-Member Request</h1>
-                <p class="text-slate-600 mt-2">Request time for a tour or a specific machine. All requests are subject to admin approval.</p>
+                <p class="text-slate-600 mt-2">Interested in a tour or using a machine? Fill out the form below and we'll get back to you.</p>
             </div>
             <form id="request-form" class="space-y-4">
                  <div>
-                    <label for="userName" class="block text-sm font-medium text-slate-700">Your Name</label>
-                    <input type="text" id="userName" required class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
-                </div>
-                <div>
-                    <label for="userEmail" class="block text-sm font-medium text-slate-700">Your Email</label>
-                    <input type="email" id="userEmail" required class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
-                </div>
-                <div>
-                    <label for="machineSelect" class="block text-sm font-medium text-slate-700">Machine / Reason for Visit</label>
-                    <select id="machineSelect" required class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
-                        <option>Loading...</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="projectDetails" class="block text-sm font-medium text-slate-700">Brief Project Description or Purpose of Visit</label>
-                    <textarea id="projectDetails" rows="3" required class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
+                    <label for="name" class="block text-sm font-medium">Your Name</label>
+                    <input type="text" id="name" required class="mt-1 block w-full rounded-md border-slate-300">
+                 </div>
+                 <div>
+                    <label for="email" class="block text-sm font-medium">Your Email</label>
+                    <input type="email" id="email" required class="mt-1 block w-full rounded-md border-slate-300">
+                 </div>
+                 <div>
+                    <label for="machine-select" class="block text-sm font-medium">Machine of Interest (or "Tour")</label>
+                    <select id="machine-select" required class="mt-1 block w-full rounded-md border-slate-300"></select>
+                 </div>
+                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label for="requestDate" class="block text-sm font-medium text-slate-700">Requested Date</label>
-                        <input type="date" id="requestDate" required class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                       <label for="date" class="block text-sm font-medium">Preferred Date</label>
+                       <input type="date" id="date" required class="mt-1 block w-full rounded-md border-slate-300">
                     </div>
                     <div>
-                        <label for="timeSlot" class="block text-sm font-medium text-slate-700">Requested Time Slot</label>
-                        <select id="timeSlot" required class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
-                            <option value="09:00">9:00 AM - 11:00 AM</option>
-                            <option value="11:00">11:00 AM - 1:00 PM</option>
-                            <option value="13:00">1:00 PM - 3:00 PM</option>
-                            <option value="15:00">3:00 PM - 5:00 PM</option>
-                        </select>
+                       <label for="start-time" class="block text-sm font-medium">Preferred Time</label>
+                       <input type="time" id="start-time" required class="mt-1 block w-full rounded-md border-slate-300">
                     </div>
-                </div>
-                <button type="submit" id="submit-request-btn" class="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Submit Request for Approval</button>
+                 </div>
+                <button type="submit" id="submit-request-btn" class="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg">Submit Request</button>
             </form>
-            <p id="success-message" class="hidden text-center text-green-600 font-semibold">Your request has been sent! An administrator will review it and contact you via email.</p>
-            <p id="error-message" class="hidden text-center text-red-600 font-semibold"></p>
+             <p id="success-message" class="hidden text-center text-green-600 font-semibold">Request sent! We will contact you shortly to confirm.</p>
         </div>
     </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, addDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, addDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
-            /* PASTE YOUR FIREBASE CONFIG OBJECT HERE */
+            apiKey: "AIzaSyA30A5Qh43IVxy0ZJnVTW9rtvYZG7Cp8-s",
+            authDomain: "area-59-makerspace.firebaseapp.com",
+            projectId: "area-59-makerspace",
+            storageBucket: "area-59-makerspace.appspot.com",
+            messagingSenderId: "721728366959",
+            appId: "1:721728366959:web:8a6513baa852e5699b609a",
+            measurementId: "G-8RFF3XJWFL"
         };
-
+        
         let db;
 
         async function initialize() {
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
-                loadMachines();
-            } catch(e) {
-                console.error(e);
-                document.getElementById('error-message').textContent = "Could not connect to the scheduling system.";
-                document.getElementById('error-message').classList.remove('hidden');
-            }
+                await loadInventory();
+            } catch (error) { console.error("Firebase Init Error:", error); }
         }
 
-        async function loadMachines() {
-            const machineSelect = document.getElementById('machineSelect');
-            try {
-                const response = await fetch('inventory.json');
-                const inventory = await response.json();
-                machineSelect.innerHTML = '<option value="">-- Select a Machine or Service --</option>';
-                const tourOption = document.createElement('option');
-                tourOption.value = "Tour of Facility";
-                tourOption.textContent = "Tour of Facility";
-                machineSelect.appendChild(tourOption);
-
-                for (const category in inventory) {
-                    const machines = inventory[category].machines || inventory[category].items;
-                    if(machines) {
-                        machines.forEach(machine => {
+        async function loadInventory() {
+            const docRef = doc(db, "inventory", "main");
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const inventory = docSnap.data().data;
+                const select = document.getElementById('machine-select');
+                select.innerHTML = '<option value="Tour">General Tour</option>';
+                 for (const category in inventory) {
+                    const items = inventory[category].items || inventory[category].machines || [];
+                    if (items.length > 0) {
+                        const optgroup = document.createElement('optgroup');
+                        optgroup.label = category;
+                        items.forEach(item => {
                             const option = document.createElement('option');
-                            option.value = machine;
-                            option.textContent = machine;
-                            machineSelect.appendChild(option);
+                            option.value = item;
+                            option.textContent = item;
+                            optgroup.appendChild(option);
                         });
+                        select.appendChild(optgroup);
                     }
                 }
-            } catch (e) {
-                machineSelect.innerHTML = '<option>Could not load machines</option>';
             }
         }
-
-        const requestForm = document.getElementById('request-form');
-        requestForm.addEventListener('submit', async (e) => {
+        
+        document.getElementById('request-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitBtn = document.getElementById('submit-request-btn');
-            const successMessage = document.getElementById('success-message');
-            const errorMessage = document.getElementById('error-message');
-            
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
-            successMessage.classList.add('hidden');
-            errorMessage.classList.add('hidden');
 
-            const appointmentData = {
-                userName: document.getElementById('userName').value,
-                userEmail: document.getElementById('userEmail').value,
-                machine: document.getElementById('machineSelect').value,
-                projectDetails: document.getElementById('projectDetails').value,
-                date: document.getElementById('requestDate').value,
-                timeSlot: document.getElementById('timeSlot').value,
-                status: 'pending',
-                requestType: 'Non-Member', // Important flag
-                requestedAt: new Date().toISOString()
+            const startTime = document.getElementById('start-time').value;
+            const tempEndTime = new Date(`1970-01-01T${startTime}`);
+            tempEndTime.setHours(tempEndTime.getHours() + 1);
+            const endTime = tempEndTime.toTimeString().substring(0,5);
+
+            const request = {
+                date: document.getElementById('date').value,
+                machine: document.getElementById('machine-select').value,
+                startTime: startTime,
+                endTime: endTime, // Assume 1 hour for non-members
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                isMember: false,
+                status: 'pending'
             };
 
             try {
-                await addDoc(collection(db, "pending_appointments"), appointmentData);
-                successMessage.classList.remove('hidden');
-                requestForm.reset();
+                await addDoc(collection(db, "pending_appointments"), request);
+                document.getElementById('success-message').classList.remove('hidden');
+                document.getElementById('request-form').reset();
             } catch (error) {
-                console.error("Error adding document: ", error);
-                errorMessage.textContent = "There was an error submitting your request. Please try again.";
-                errorMessage.classList.remove('hidden');
+                console.error(error);
+                alert("Failed to submit request.");
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit Request for Approval';
+                 submitBtn.disabled = false;
             }
         });
 
@@ -158,3 +139,4 @@
     </script>
 </body>
 </html>
+
