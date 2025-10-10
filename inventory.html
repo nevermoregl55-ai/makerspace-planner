@@ -17,6 +17,33 @@
             backdrop-filter: blur(10px);
         }
         #main-content { display: none; }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-area, #printable-area * {
+                visibility: visible;
+            }
+            #printable-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -39,6 +66,7 @@
         <header class="text-center mb-8 p-6 rounded-xl content-panel shadow-md">
             <h1 class="text-4xl font-bold text-slate-900">Inventory Management</h1>
             <p class="text-slate-700 mt-2">Add, remove, and update the equipment, materials, and software available at Area 59.</p>
+            <button id="print-consumables-btn" class="mt-4 px-4 py-2 font-semibold text-white bg-gray-600 rounded-lg hover:bg-gray-700">Print Consumables List</button>
         </header>
 
         <div id="inventory-container" class="space-y-6">
@@ -58,18 +86,20 @@
              <p id="save-status" class="text-green-600 mt-4 font-medium h-6"></p>
         </div>
     </div>
+    
+    <!-- Area for the printable report -->
+    <div id="printable-area" class="hidden"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Corrected Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyA30A5Qh43IVxy0ZJnVTW9rtvYZG7Cp8-s",
             authDomain: "area-59-makerspace.firebaseapp.com",
             projectId: "area-59-makerspace",
-            storageBucket: "area-59-makerspace.firebasestorage.app", // Corrected URL
+            storageBucket: "area-59-makerspace.firebasestorage.app",
             messagingSenderId: "721728366959",
             appId: "1:721728366959:web:8a6513baa852e5699b609a",
             measurementId: "G-8RFF3XJWFL"
@@ -90,31 +120,21 @@
                 await signInAnonymously(auth);
                 inventoryDocRef = doc(db, 'inventory', 'main');
                 isFirebaseConnected = true;
-                console.log("Firebase connected successfully on page load.");
             } catch (e) { 
                 console.error("Firebase Initialization Error:", e);
-                loginError.textContent = "Could not connect to Firebase. Check console.";
+                loginError.textContent = "Could not connect to Firebase.";
                 loginError.classList.remove('hidden');
             }
         });
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            loginError.classList.add('hidden');
-
-            if (document.getElementById('password-input').value !== "Pronghorn@59") {
-                loginError.textContent = "Incorrect password.";
-                loginError.classList.remove('hidden');
-                return;
-            }
-            
-            if(isFirebaseConnected) {
+            if (document.getElementById('password-input').value === "Pronghorn@59" && isFirebaseConnected) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
                 loadInventory();
             } else {
-                 loginError.textContent = "Could not connect to Firebase. Check console.";
-                 loginError.classList.remove('hidden');
+                loginError.classList.remove('hidden');
             }
         });
 
@@ -122,16 +142,11 @@
         async function loadInventory() {
             try {
                 const docSnap = await getDoc(inventoryDocRef);
-                if (docSnap.exists()) {
-                    inventoryData = docSnap.data().data;
-                } else {
-                    console.warn("No inventory document found. Using an empty object.");
-                    inventoryData = { "Software": { "items": ["Default Item"] } };
-                }
+                inventoryData = docSnap.exists() ? docSnap.data().data : { "Default Category": { items: [] } };
                 renderInventory();
             } catch (error) {
                 console.error("Error loading inventory:", error);
-                document.getElementById('inventory-container').innerHTML = `<p class="text-center text-red-500">Error loading inventory. Check security rules and console.</p>`;
+                document.getElementById('inventory-container').innerHTML = `<p class="text-center text-red-500">Error loading inventory.</p>`;
             }
         }
         
@@ -143,37 +158,106 @@
                 inventoryContainer.appendChild(categoryEl);
             }
         }
+
+        function getAllMachines() {
+            let machines = [];
+            for (const category in inventoryData) {
+                const items = inventoryData[category].machines || inventoryData[category].items || [];
+                machines.push(...items);
+            }
+            return machines;
+        }
         
         function createCategoryElement(categoryName, categoryData) {
             const div = document.createElement('div');
             div.className = 'content-panel p-6 rounded-xl shadow-md';
             
-            let contentHTML = `
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold">${categoryName}</h2>
-                    <button class="remove-category-btn text-red-500 hover:text-red-700 font-bold text-lg" data-category="${categoryName}">Remove Category</button>
-                </div>`;
+            let contentHTML = `<div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">${categoryName}</h2><button class="remove-category-btn text-red-500 hover:text-red-700 font-bold text-lg" data-category="${categoryName}">Remove Category</button></div>`;
 
             if (categoryData.hasOwnProperty('machines')) {
+                // Machines List
                 contentHTML += `
-                    <h3 class="text-lg font-semibold mb-2">Machines</h3>
+                    <h3 class="text-lg font-semibold mb-2">Publicly Listed Machines</h3>
                     <ul class="list-disc list-inside space-y-2 mb-4">
-                        ${(categoryData.machines || []).map(item => `<li><span>${item}</span> <button class="remove-item-btn text-red-500 font-bold ml-2" data-category="${categoryName}" data-item="${item}" data-list-type="machines">x</button></li>`).join('')}
+                        ${(categoryData.machines || []).map(item => `
+                            <li class="flex justify-between items-center">
+                                <span>${item}</span>
+                                <button class="remove-item-btn text-red-500 hover:text-red-700 font-bold" data-category="${categoryName}" data-item="${item}" data-list-type="machines">&times;</button>
+                            </li>`).join('')}
                     </ul>
-                    <div class="flex gap-4 mb-6"><input type="text" class="new-item-input flex-grow rounded-md"><button class="add-item-btn bg-blue-500 text-white px-3 rounded-md" data-category="${categoryName}" data-list-type="machines">Add Machine</button></div><hr class="my-4">`;
+                    <div class="flex gap-4 mb-6">
+                        <input type="text" class="new-item-input flex-grow w-full px-4 py-2 text-slate-900 bg-white border border-slate-300 rounded-lg" placeholder="New Machine Name">
+                        <button class="add-item-btn px-5 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700" data-category="${categoryName}" data-list-type="machines">Add Machine</button>
+                    </div>`;
+
+                // Materials List
                 contentHTML += `
-                    <h3 class="text-lg font-semibold mb-2">Available Materials</h3>
+                    <h3 class="text-lg font-semibold mb-2">Publicly Listed Materials</h3>
                     <ul class="list-disc list-inside space-y-2 mb-4">
-                         ${(categoryData.materials || []).map(item => `<li><span>${item}</span> <button class="remove-item-btn text-red-500 font-bold ml-2" data-category="${categoryName}" data-item="${item}" data-list-type="materials">x</button></li>`).join('')}
+                         ${(categoryData.materials || []).map(item => `
+                            <li class="flex justify-between items-center">
+                                <span>${item}</span>
+                                <button class="remove-item-btn text-red-500 hover:text-red-700 font-bold" data-category="${categoryName}" data-item="${item}" data-list-type="materials">&times;</button>
+                            </li>`).join('')}
                     </ul>
-                    <div class="flex gap-4"><input type="text" class="new-item-input flex-grow rounded-md"><button class="add-item-btn bg-blue-500 text-white px-3 rounded-md" data-category="${categoryName}" data-list-type="materials">Add Material</button></div>`;
+                    <div class="flex gap-4">
+                        <input type="text" class="new-item-input flex-grow w-full px-4 py-2 text-slate-900 bg-white border border-slate-300 rounded-lg" placeholder="New Material Name">
+                        <button class="add-item-btn px-5 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700" data-category="${categoryName}" data-list-type="materials">Add Material</button>
+                    </div>`;
             } else {
+                // Simple Items List
                 contentHTML += `
+                    <h3 class="text-lg font-semibold mb-2">Publicly Listed Items</h3>
                     <ul class="list-disc list-inside space-y-2 mb-4">
-                        ${(categoryData.items || []).map(item => `<li><span>${item}</span> <button class="remove-item-btn text-red-500 font-bold ml-2" data-category="${categoryName}" data-item="${item}" data-list-type="items">x</button></li>`).join('')}
+                        ${(categoryData.items || []).map(item => `
+                            <li class="flex justify-between items-center">
+                                <span>${item}</span>
+                                <button class="remove-item-btn text-red-500 hover:text-red-700 font-bold" data-category="${categoryName}" data-item="${item}" data-list-type="items">&times;</button>
+                            </li>`).join('')}
                     </ul>
-                    <div class="flex gap-4"><input type="text" class="new-item-input flex-grow rounded-md"><button class="add-item-btn bg-blue-500 text-white px-3 rounded-md" data-category="${categoryName}" data-list-type="items">Add Item</button></div>`;
+                    <div class="flex gap-4">
+                        <input type="text" class="new-item-input flex-grow w-full px-4 py-2 text-slate-900 bg-white border border-slate-300 rounded-lg" placeholder="New Item Name">
+                        <button class="add-item-btn px-5 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700" data-category="${categoryName}" data-list-type="items">Add Item</button>
+                    </div>`;
             }
+
+            // Consumables Section
+            contentHTML += `<hr class="my-6 border-t-2 border-slate-300">`;
+            contentHTML += `<h3 class="text-xl font-semibold mb-4 text-slate-600">Consumables & Parts (Private)</h3>`;
+            contentHTML += `<div class="overflow-x-auto"><table class="w-full text-sm text-left mb-4">
+                <thead class="bg-slate-100"><tr>
+                    <th class="p-2">Name</th><th class="p-2">Qty</th><th class="p-2">Model #</th><th class="p-2">For Machine</th><th class="p-2">Price</th><th class="p-2"></th>
+                </tr></thead><tbody>`;
+            
+            (categoryData.consumables || []).forEach((item, index) => {
+                contentHTML += `<tr>
+                    <td class="border-b p-2">${item.name}</td><td class="border-b p-2">${item.quantity}</td>
+                    <td class="border-b p-2">${item.modelNumber}</td><td class="border-b p-2">${item.machine}</td>
+                    <td class="border-b p-2">$${item.price}</td>
+                    <td class="border-b p-2 text-right"><button class="remove-consumable-btn text-red-500 font-bold" data-category="${categoryName}" data-index="${index}">&times;</button></td>
+                </tr>`;
+            });
+
+            contentHTML += `</tbody></table></div>`;
+            
+            // Add New Consumable Form
+            const allMachines = getAllMachines();
+            contentHTML += `<div class="add-consumable-form space-y-2 mt-4 p-4 border rounded-lg bg-slate-50" data-category="${categoryName}">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <input type="text" placeholder="Name" class="consumable-name rounded-md border-slate-300">
+                    <input type="number" placeholder="Quantity" class="consumable-quantity rounded-md border-slate-300">
+                    <input type="text" placeholder="Model #" class="consumable-model rounded-md border-slate-300">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <select class="consumable-machine rounded-md border-slate-300">
+                        <option value="General">General Use</option>
+                        ${allMachines.map(m => `<option value="${m}">${m}</option>`).join('')}
+                    </select>
+                    <input type="number" step="0.01" placeholder="Price" class="consumable-price rounded-md border-slate-300">
+                    <button class="add-consumable-btn bg-green-600 text-white rounded-md p-2">Add Consumable</button>
+                </div>
+            </div>`;
+
             div.innerHTML = contentHTML;
             return div;
         }
@@ -202,7 +286,7 @@
                     renderInventory();
                 }
             } else if (target.classList.contains('remove-item-btn')) {
-                 const itemToRemove = target.dataset.item;
+                const itemToRemove = target.dataset.item;
                 if (category && itemToRemove && listType) {
                     inventoryData[category][listType] = inventoryData[category][listType].filter(item => item !== itemToRemove);
                     renderInventory();
@@ -212,7 +296,45 @@
                     delete inventoryData[category];
                     renderInventory();
                 }
+            } else if (target.classList.contains('add-consumable-btn')) {
+                const form = target.closest('.add-consumable-form');
+                const newConsumable = {
+                    name: form.querySelector('.consumable-name').value,
+                    quantity: form.querySelector('.consumable-quantity').value,
+                    modelNumber: form.querySelector('.consumable-model').value,
+                    machine: form.querySelector('.consumable-machine').value,
+                    price: form.querySelector('.consumable-price').value,
+                };
+                if (!inventoryData[category].consumables) inventoryData[category].consumables = [];
+                inventoryData[category].consumables.push(newConsumable);
+                renderInventory();
+            } else if (target.classList.contains('remove-consumable-btn')) {
+                const index = parseInt(target.dataset.index);
+                inventoryData[category].consumables.splice(index, 1);
+                renderInventory();
             }
+        });
+        
+        document.getElementById('print-consumables-btn').addEventListener('click', () => {
+            const printableArea = document.getElementById('printable-area');
+            let printHTML = `<h1>Area 59 Consumables Inventory</h1><p>Date: ${new Date().toLocaleDateString()}</p>`;
+            for (const category in inventoryData) {
+                const consumables = inventoryData[category].consumables;
+                if (consumables && consumables.length > 0) {
+                    printHTML += `<h2 style="margin-top: 20px; border-bottom: 1px solid #ccc;">${category}</h2><table><thead><tr>
+                        <th>Name</th><th>Qty</th><th>Model #</th><th>For Machine</th><th>Price</th>
+                    </tr></thead><tbody>`;
+                    consumables.forEach(item => {
+                        printHTML += `<tr>
+                            <td>${item.name || ''}</td><td>${item.quantity || ''}</td><td>${item.modelNumber || ''}</td>
+                            <td>${item.machine || ''}</td><td>$${item.price || '0.00'}</td>
+                        </tr>`;
+                    });
+                    printHTML += `</tbody></table>`;
+                }
+            }
+            printableArea.innerHTML = printHTML;
+            window.print();
         });
 
         document.getElementById('save-inventory-btn').addEventListener('click', async () => {
