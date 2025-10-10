@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Area 59 Makerspace Hub</title>
+    <title>Area 59 Makerspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -13,71 +13,68 @@
             background-attachment: fixed;
         }
         .content-panel {
-            background-color: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
         }
-        .link-card {
-            background-color: rgba(255, 255, 255, 0.6);
-            transition: all 0.2s ease-in-out;
+        .nav-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
-        .link-card:hover {
+        .nav-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body class="text-slate-800">
-
-    <div class="container mx-auto max-w-5xl p-4 sm:p-6 md:p-8">
-        <header class="text-center mb-8 relative p-6 rounded-xl content-panel shadow-md">
-            <img src="Area_59_Logo_Color_3x1.png" alt="Area 59 Logo" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-32 opacity-50">
-            <div class="relative">
-                <h1 class="text-4xl font-bold text-slate-900">Area 59 Makerspace Hub</h1>
-                <p class="text-slate-700 mt-2 max-w-3xl mx-auto">Welcome! From here you can plan a project, view past work, or schedule time on a machine.</p>
-            </div>
+    <div class="container mx-auto max-w-4xl p-4 sm:p-6 md:p-8">
+        <header class="text-center mb-8 p-6 rounded-xl content-panel shadow-md">
+             <img src="Area_59_Logo_Color_3x1.png" alt="Area 59 Logo" class="mx-auto h-24 mb-4">
+            <h1 class="text-5xl font-bold text-slate-900">Area 59 Makerspace</h1>
+            <p class="text-slate-700 mt-2 text-lg">Your central hub for project planning, scheduling, and inspiration.</p>
         </header>
 
         <!-- Public Pages -->
         <div class="mb-12">
-            <h2 class="text-3xl font-bold text-white text-center mb-6" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.4);">Public Pages</h2>
+            <h2 class="text-3xl font-bold text-white text-center mb-6" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">Public Resources</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <a href="project_planner.html" class="block p-6 rounded-lg shadow-lg link-card">
+                 <a href="project_planner.html" class="nav-card block p-6 rounded-2xl shadow-lg bg-white/80">
                     <h3 class="text-xl font-bold text-slate-800">AI Project Planner</h3>
-                    <p class="mt-1 text-slate-600">Get a detailed plan for your next great idea.</p>
+                    <p class="mt-2 text-slate-600">Get a head start on your next project with an AI-generated plan.</p>
                 </a>
-                <a href="gallery.html" class="block p-6 rounded-lg shadow-lg link-card">
+                 <a href="public_schedule.html" class="nav-card block p-6 rounded-2xl shadow-lg bg-white/80">
+                    <h3 class="text-xl font-bold text-slate-800">Public Schedule</h3>
+                    <p class="mt-2 text-slate-600">View all upcoming classes and machine bookings.</p>
+                </a>
+                <a href="gallery.html" class="nav-card block p-6 rounded-2xl shadow-lg bg-white/80">
                     <h3 class="text-xl font-bold text-slate-800">Project Gallery</h3>
-                    <p class="mt-1 text-slate-600">Browse projects made by other members.</p>
+                    <p class="mt-2 text-slate-600">Browse projects made by other members for inspiration.</p>
                 </a>
-                 <a href="calendar.html" class="block p-6 rounded-lg shadow-lg link-card">
-                    <h3 class="text-xl font-bold text-slate-800">Class Calendar</h3>
-                    <p class="mt-1 text-slate-600">See upcoming classes and events.</p>
-                </a>
-                <a href="appointments.html" class="block p-6 rounded-lg shadow-lg link-card">
+                <a href="appointments.html" class="nav-card block p-6 rounded-2xl shadow-lg bg-white/80">
                     <h3 class="text-xl font-bold text-slate-800">Member Appointments</h3>
-                    <p class="mt-1 text-slate-600">View the schedule and request machine time.</p>
+                    <p class="mt-2 text-slate-600">Members can request machine time here.</p>
                 </a>
-                <a href="non_member_appointments.html" class="block p-6 rounded-lg shadow-lg link-card">
-                    <h3 class="text-xl font-bold text-slate-800">Non-Member Appointments</h3>
-                    <p class="mt-1 text-slate-600">Request a tour or time on a machine.</p>
+                 <a href="calendar.html" class="nav-card block p-6 rounded-2xl shadow-lg bg-white/80">
+                    <h3 class="text-xl font-bold text-slate-800">Class Calendar</h3>
+                    <p class="mt-2 text-slate-600">See class details and find registration links.</p>
+                </a>
+                <a href="non_member_appointments.html" class="nav-card block p-6 rounded-2xl shadow-lg bg-white/80">
+                    <h3 class="text-xl font-bold text-slate-800">Non-Member Inquiry</h3>
+                    <p class="mt-2 text-slate-600">Request information or an appointment as a non-member.</p>
                 </a>
             </div>
         </div>
 
         <!-- Admin Section -->
         <div>
-            <h2 class="text-3xl font-bold text-white text-center mb-6" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.4);">Administrator</h2>
-            <div class="max-w-md mx-auto">
-                <a href="admin.html" class="block p-6 rounded-lg shadow-lg link-card text-center">
+            <h2 class="text-3xl font-bold text-white text-center mb-6" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">Administration</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                <a href="admin.html" class="nav-card block p-6 rounded-2xl shadow-lg bg-white/80">
                     <h3 class="text-xl font-bold text-slate-800">Admin Dashboard</h3>
-                    <p class="mt-1 text-slate-600">Manage inventory, approve projects, and set appointments.</p>
+                    <p class="mt-2 text-slate-600">Access all administrative tools and settings.</p>
                 </a>
             </div>
         </div>
-
     </div>
-
 </body>
 </html>
 
