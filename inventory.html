@@ -64,12 +64,12 @@
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Cleaned Firebase Config
+        // Corrected Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyA30A5Qh43IVxy0ZJnVTW9rtvYZG7Cp8-s",
             authDomain: "area-59-makerspace.firebaseapp.com",
             projectId: "area-59-makerspace",
-            storageBucket: "area-59-makerspace.appspot.com",
+            storageBucket: "area-59-makerspace.firebasestorage.app", // Corrected URL
             messagingSenderId: "721728366959",
             appId: "1:721728366959:web:8a6513baa852e5699b609a",
             measurementId: "G-8RFF3XJWFL"
@@ -77,25 +77,26 @@
         
         let db, auth, inventoryDocRef;
         let inventoryData = {};
+        let isFirebaseConnected = false;
 
         const loginForm = document.getElementById('login-form');
         const loginError = document.getElementById('login-error');
 
-        async function initializeFirebase() {
+        document.addEventListener('DOMContentLoaded', async () => {
              try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
                 await signInAnonymously(auth);
                 inventoryDocRef = doc(db, 'inventory', 'main');
-                return true;
+                isFirebaseConnected = true;
+                console.log("Firebase connected successfully on page load.");
             } catch (e) { 
                 console.error("Firebase Initialization Error:", e);
                 loginError.textContent = "Could not connect to Firebase. Check console.";
                 loginError.classList.remove('hidden');
-                return false;
             }
-        }
+        });
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -107,11 +108,13 @@
                 return;
             }
             
-            const connected = await initializeFirebase();
-            if(connected) {
+            if(isFirebaseConnected) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
                 loadInventory();
+            } else {
+                 loginError.textContent = "Could not connect to Firebase. Check console.";
+                 loginError.classList.remove('hidden');
             }
         });
 
