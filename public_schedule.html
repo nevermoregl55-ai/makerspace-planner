@@ -22,6 +22,7 @@
         .event-slot.appointment { background-color: #64748b; } /* slate-500 */
         .event-slot.class-open { background-color: #22c55e; cursor: pointer; } /* green-500 */
         .event-slot.class-full { background-color: #ef4444; cursor: pointer; } /* red-500 */
+        .event-slot.walk-in { background-color: #f59e0b; } /* amber-500 */
         #class-details-modal { display: none; }
     </style>
 </head>
@@ -39,11 +40,12 @@
         <header class="text-center mb-8 relative">
             <a href="index.html"><img src="Area_59_Logo_Color_3x1.png" alt="Area 59 Logo" class="mx-auto h-20 mb-4"></a>
             <h1 class="text-4xl font-bold text-slate-900">Makerspace Schedule</h1>
-            <p class="text-slate-600 mt-2">View all scheduled classes and machine appointments.</p>
+            <p class="text-slate-600 mt-2">View all scheduled classes, machine appointments, and walk-in hours.</p>
             <div class="mt-4 flex justify-center gap-4 text-sm flex-wrap">
                 <span class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-slate-500"></div> Booked Machine</span>
                 <span class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-green-500"></div> Class (Seats Open)</span>
                 <span class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-500"></div> Class (Full)</span>
+                <span class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-amber-500"></div> Walk-in Hours</span>
             </div>
         </header>
 
@@ -58,7 +60,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
         const firebaseConfig = {
@@ -92,8 +94,9 @@
             allEvents = [];
             const classesQuery = getDocs(collection(db, "classes"));
             const appointmentsQuery = getDocs(collection(db, "public_appointments"));
+            const walkInQuery = getDoc(doc(db, "walk_in_hours", "schedule"));
 
-            const [classesSnapshot, appointmentsSnapshot] = await Promise.all([classesQuery, appointmentsQuery]);
+            const [classesSnapshot, appointmentsSnapshot, walkInSnap] = await Promise.all([classesQuery, appointmentsQuery, walkInQuery]);
 
             classesSnapshot.forEach((doc) => {
                 allEvents.push({ id: doc.id, type: 'class', ...doc.data() });
@@ -101,6 +104,11 @@
             appointmentsSnapshot.forEach((doc) => {
                 allEvents.push({ id: doc.id, type: 'appointment', ...doc.data() });
             });
+            if (walkInSnap.exists()) {
+                walkInSnap.data().hours.forEach(hour => {
+                    allEvents.push({ type: 'walk-in', ...hour });
+                });
+            }
         }
 
         function renderCalendar() {
@@ -140,9 +148,12 @@
                         eventDiv.classList.add(isFull ? 'class-full' : 'class-open');
                         eventDiv.textContent = `${event.startTime} - ${event.name}`;
                         eventDiv.dataset.eventId = event.id;
-                    } else { // It's an appointment
+                    } else if (event.type === 'appointment') {
                         eventDiv.classList.add('appointment');
                         eventDiv.textContent = `${event.startTime} - ${event.machine}`;
+                    } else if (event.type === 'walk-in') {
+                         eventDiv.classList.add('walk-in');
+                         eventDiv.textContent = `Walk-in: ${event.startTime} - ${event.endTime}`;
                     }
                     dayEl.appendChild(eventDiv);
                 });
@@ -157,7 +168,6 @@
 
         document.getElementById('calendar').addEventListener('click', e => {
             const eventSlot = e.target.closest('.event-slot');
-            // Only open modal for classes
             if (eventSlot && (eventSlot.classList.contains('class-open') || eventSlot.classList.contains('class-full'))) {
                 const eventId = eventSlot.dataset.eventId;
                 const eventData = allEvents.find(e => e.id === eventId);
@@ -206,3 +216,4 @@
     </script>
 </body>
 </html>
+
