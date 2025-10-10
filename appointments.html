@@ -307,7 +307,39 @@
 
         // Appointment Request Modal
         document.getElementById('cancel-request-btn').addEventListener('click', () => requestModal.style.display = 'none');
-        document.getElementById('request-form').addEventListener('submit', async (e) => { e.preventDefault(); /* ... same as before ... */ });
+        document.getElementById('request-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submit-request-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            const request = {
+                date: document.getElementById('request-date').value,
+                machine: document.getElementById('machine-select').value,
+                startTime: document.getElementById('start-time').value,
+                endTime: document.getElementById('end-time').value,
+                name: document.getElementById('member-name').value,
+                email: document.getElementById('member-email').value,
+                isMember: true,
+                status: 'pending'
+            };
+
+            try {
+                await addDoc(collection(db, "pending_appointments"), request);
+                document.getElementById('success-message').classList.remove('hidden');
+                setTimeout(() => {
+                    requestModal.style.display = 'none';
+                    document.getElementById('success-message').classList.add('hidden');
+                    document.getElementById('request-form').reset();
+                }, 3000);
+            } catch (error) {
+                console.error("Error submitting request:", error);
+                alert("Failed to submit request. Please try again.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Request';
+            }
+        });
 
         // Walk-in Modal
         document.getElementById('cancel-walk-in-btn').addEventListener('click', () => walkInModal.style.display = 'none');
@@ -363,4 +395,3 @@
     </script>
 </body>
 </html>
-
