@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Area 59 - Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -39,32 +39,34 @@
     <div id="main-content" class="container mx-auto max-w-6xl p-4 sm:p-6 md:p-8">
         <header class="text-center mb-8 p-6 rounded-xl content-panel shadow-md">
             <h1 class="text-4xl font-bold text-slate-900">Admin Dashboard</h1>
-            <a href="project_planner.html" class="text-blue-600 hover:underline mt-2 inline-block">View Public Project Planner &rarr;</a>
+            <a href="index.html" class="text-blue-600 hover:underline mt-2 inline-block">View Main Hub &rarr;</a>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Left Column: Management Links -->
-            <div class="space-y-8">
-                <div class="p-8 rounded-2xl shadow-lg content-panel">
-                    <h2 class="text-2xl font-bold text-slate-800 mb-4">Management</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <a href="inventory.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
-                            <h3 class="font-bold">Manage Inventory</h3>
-                            <p class="text-sm text-slate-600">Edit tools and materials.</p>
-                        </a>
-                        <a href="add_project.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
-                            <h3 class="font-bold">Add a Project</h3>
-                            <p class="text-sm text-slate-600">Log a new project.</p>
-                        </a>
-                        <a href="approve_projects.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
-                            <h3 class="font-bold">Approve Projects</h3>
-                            <p class="text-sm text-slate-600">Publish projects to the gallery.</p>
-                        </a>
-                        <a href="approve_appointments.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
-                            <h3 class="font-bold">Approve Appointments</h3>
-                            <p class="text-sm text-slate-600">Review new machine requests.</p>
-                        </a>
-                    </div>
+            <div class="p-8 rounded-2xl shadow-lg content-panel">
+                <h2 class="text-2xl font-bold text-slate-800 mb-4">Management</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <a href="inventory.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
+                        <h3 class="font-bold">Manage Inventory</h3>
+                        <p class="text-sm text-slate-600">Edit tools and materials.</p>
+                    </a>
+                    <a href="add_project.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
+                        <h3 class="font-bold">Add a Project</h3>
+                        <p class="text-sm text-slate-600">Log a new project.</p>
+                    </a>
+                    <a href="approve_projects.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
+                        <h3 class="font-bold">Approve Projects</h3>
+                        <p class="text-sm text-slate-600">Publish projects to the gallery.</p>
+                    </a>
+                    <a href="approve_appointments.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
+                        <h3 class="font-bold">Approve Appointments</h3>
+                        <p class="text-sm text-slate-600">Review new machine requests.</p>
+                    </a>
+                    <a href="add_class.html" class="block p-6 rounded-lg shadow-md hover:shadow-xl bg-white/50 transition">
+                        <h3 class="font-bold">Add a Class/Event</h3>
+                        <p class="text-sm text-slate-600">Post a new class to the public calendar.</p>
+                    </a>
                 </div>
             </div>
 
@@ -82,6 +84,7 @@
     </div>
 
     <script type="module">
+        // Same as previous admin.html script
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -89,10 +92,10 @@
         const firebaseConfig = {
             /* PASTE YOUR FIREBASE CONFIG OBJECT HERE */
         };
-
+        // ... rest of the script from previous admin.html is the same
+        
         let db, auth;
 
-        // --- Authentication ---
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (document.getElementById('password-input').value === "Pronghorn@59") {
@@ -117,7 +120,6 @@
             }
         }
 
-        // --- Walk-in Hours Logic ---
         function generateDatePickers() {
             const container = document.getElementById('walk-in-schedule-container');
             container.innerHTML = '';
