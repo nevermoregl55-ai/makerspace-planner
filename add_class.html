@@ -51,6 +51,20 @@
                     <label for="class-description" class="block text-sm font-medium">Description</label>
                     <textarea id="class-description" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm"></textarea>
                 </div>
+                <div>
+                    <label for="class-registration-link" class="block text-sm font-medium">Registration Link (Optional)</label>
+                    <input type="url" id="class-registration-link" placeholder="https://..." class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="class-max-size" class="block text-sm font-medium">Max Class Size</label>
+                        <input type="number" id="class-max-size" required value="10" min="1" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label for="class-current-size" class="block text-sm font-medium">Current # of Registrants</label>
+                        <input type="number" id="class-current-size" required value="0" min="0" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
+                    </div>
+                </div>
                  <div>
                     <label for="class-date" class="block text-sm font-medium">Date of First Class</label>
                     <input type="date" id="class-date" required class="mt-1 block w-full rounded-md border-slate-300 shadow-sm">
@@ -90,7 +104,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, writeBatch, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -154,6 +168,9 @@
             const baseClass = {
                 name: document.getElementById('class-name').value,
                 description: document.getElementById('class-description').value,
+                registrationLink: document.getElementById('class-registration-link').value,
+                maxSize: parseInt(document.getElementById('class-max-size').value),
+                currentSize: parseInt(document.getElementById('class-current-size').value),
                 startTime: document.getElementById('start-time').value,
                 endTime: document.getElementById('end-time').value,
             };
