@@ -1,0 +1,82 @@
+{
+  "Software": {
+    "items": [
+      "Adobe Illustrator",
+      "Adobe Photoshop",
+      "Blender",
+      "SolidWorks",
+      "VCarve"
+    ]
+  },
+  "3D Printing & Scanning": {
+    "machines": [
+      "Stratasys F170",
+      "Bambu Lab P1S",
+      "Bambu Lab A1 mini",
+      "Sonic Mega 8K S (x2)",
+      "Creality Ender 3 V3",
+      "Elegoo Neptune 4 Max",
+      "Shining 3D Pro Scanner"
+    ],
+    "materials": [
+      "PLA Filament (Various Colors)",
+      "PETG Filament",
+      "ABS Filament",
+      "SLA Resin (Standard Gray)"
+    ]
+  },
+  "Paper & Vinyl Printing": {
+    "machines": [
+      "Canon imageRUNNER C3525i",
+      "Canon imagePROGRAF PRO-4000S",
+      "HP DesignJet T790"
+    ],
+    "materials": [
+      "Glossy Photo Paper",
+      "Matte Poster Paper",
+      "Adhesive Vinyl (White)",
+      "Canvas Roll",
+      "Banner Material"
+    ]
+  },
+  "Velocity Machines": {
+    "items": [
+      "Velocity CNC Router (4'x8')",
+      "Velocity CNC Router (2'x3', x2)",
+      "Velocity Plasma Table (4'x8')"
+    ]
+  },
+  "Metalworking": {
+    "items": [
+      "Tormach PCNC 1100 Mill",
+      "Acer Mill",
+      "Marvel Spartan S20V Bandsaw",
+      "Horizontal Metal Bandsaw",
+      "Baileigh Cold Saw",
+      "JET 10\" Bench Grinder"
+    ]
+  },
+  "Wood Shop": {
+    "items": [
+      "Table Saw",
+      "DeWalt Miter Saw",
+      "Baileigh Bandsaw",
+      "Baileigh DP-1200VS Drill Press",
+      "Baileigh DP-2012F-HD-V2 Drill Press",
+      "Lathe",
+      "Baileigh Planer",
+      "Baileigh Jointer",
+      "Baileigh Shaper Table",
+      "Powermatic Belt Sander",
+      "JET Belt/Disc Sander"
+    ]
+  },
+  "Electronics": {
+    "items": [
+      "Soldering Station",
+      "Oscilloscope",
+      "Power Supply",
+      "Multimeter"
+    ]
+  }
+}
