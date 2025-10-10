@@ -21,6 +21,10 @@
             position: relative;
             cursor: pointer;
         }
+        .class-event.full {
+            background-color: #64748b; /* slate-500 */
+            cursor: default;
+        }
         .delete-btn {
             position: absolute;
             top: 2px;
@@ -103,7 +107,7 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 const auth = getAuth(app);
-                await signInAnonymously(auth); // This line is crucial for write/delete permissions
+                await signInAnonymously(auth);
                 
                 await loadClasses();
                 renderCalendar();
@@ -150,7 +154,16 @@
                 dayClasses.sort((a,b) => a.startTime.localeCompare(b.startTime));
                 dayClasses.forEach(c => {
                     const classDiv = document.createElement('div');
+                    const isFull = c.hasOwnProperty('currentSize') && c.maxSize && c.currentSize >= c.maxSize;
+                    
                     classDiv.className = 'class-event';
+                    if (isFull) {
+                        classDiv.classList.add('full');
+                        classDiv.title = `${c.name} (Full)\n${c.startTime} - ${c.endTime}\n${c.description}`;
+                    } else {
+                        classDiv.title = `${c.name}\n${c.startTime} - ${c.endTime}\n${c.description}`;
+                    }
+
                     classDiv.dataset.classId = c.id; 
                     classDiv.innerHTML = `
                         ${c.startTime} - ${c.name}
@@ -174,7 +187,9 @@
                 const classData = classes.find(c => c.id === classId);
                 if (classData) {
                     const isAdmin = document.body.classList.contains('admin-mode');
+                    const isFull = classData.hasOwnProperty('currentSize') && classData.maxSize && classData.currentSize >= classData.maxSize;
                     let seatsHTML;
+                    let registrationHTML = '';
 
                     if (isAdmin) {
                         seatsHTML = `
@@ -187,10 +202,20 @@
                             </div>
                         `;
                     } else {
-                        const seatsAvailable = (classData.maxSize && classData.hasOwnProperty('currentSize')) 
-                            ? `${classData.maxSize - classData.currentSize} of ${classData.maxSize} available` 
-                            : 'N/A';
-                        seatsHTML = `<p><span class="font-semibold">Seats Available:</span> ${seatsAvailable}</p>`;
+                        if (isFull) {
+                            seatsHTML = `<p><span class="font-semibold">Seats Available:</span> <span class="font-bold text-red-600">This class is full.</span></p>`;
+                        } else {
+                            const seatsLeft = classData.maxSize - classData.currentSize;
+                            seatsHTML = `<p><span class="font-semibold">Seats Available:</span> ${seatsLeft} of ${classData.maxSize} available</p>`;
+                        }
+                    }
+
+                    if (classData.registrationLink) {
+                        if (isFull && !isAdmin) {
+                            registrationHTML = `<button disabled class="block w-full text-center mt-4 px-4 py-3 font-semibold text-white bg-slate-400 rounded-lg cursor-not-allowed">Sold Out</button>`;
+                        } else {
+                            registrationHTML = `<a href="${classData.registrationLink}" target="_blank" class="block w-full text-center mt-4 px-4 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Register Now</a>`;
+                        }
                     }
 
                     classDetailsContent.innerHTML = `
@@ -203,7 +228,7 @@
                             ${seatsHTML}
                         </div>
                         ${isAdmin ? `<button id="update-class-btn" data-id="${classId}" class="w-full mt-4 px-4 py-2 font-semibold text-white bg-green-600 rounded-lg">Update Registrants</button>` : ''}
-                        ${classData.registrationLink ? `<a href="${classData.registrationLink}" target="_blank" class="block w-full text-center mt-4 px-4 py-3 font-semibold text-white bg-blue-600 rounded-lg">Register Now</a>` : ''}
+                        ${registrationHTML}
                         <p id="update-status" class="text-center h-4 mt-2"></p>
                     `;
                     classDetailsContent.dataset.maxSize = classData.maxSize;
@@ -241,7 +266,6 @@
                 await updateDoc(classRef, { currentSize: newSize });
                 statusEl.textContent = 'Updated successfully!';
                 
-                // Update local data before re-rendering for instant feedback
                 const classToUpdate = classes.find(c => c.id === id);
                 if(classToUpdate) classToUpdate.currentSize = newSize;
                 
