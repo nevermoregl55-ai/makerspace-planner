@@ -75,17 +75,11 @@
             </a>
             <div class="dashboard-card p-8 rounded-2xl shadow-lg bg-white/80">
                 <h2 class="text-2xl font-bold text-slate-800">Set Walk-in Hours</h2>
-                <p class="mt-2 text-slate-600 mb-4">Set recurring open shop hours for the next two weeks.</p>
-                <form id="walk-in-form" class="space-y-3">
-                    <select id="day-of-week" class="w-full p-2 rounded-md border-slate-300">
-                        <option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option>
-                    </select>
-                    <div class="flex gap-2">
-                        <input type="time" id="start-time" required class="w-full p-2 rounded-md border-slate-300">
-                        <input type="time" id="end-time" required class="w-full p-2 rounded-md border-slate-300">
-                    </div>
-                    <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-green-600 rounded-lg">Set Hours</button>
+                <p class="mt-2 text-slate-600 mb-4">Set a weekly schedule. This will generate walk-in slots for the next 14 days.</p>
+                <form id="walk-in-form" class="space-y-2">
+                    <!-- Day rows will be injected here by JS -->
                 </form>
+                <button id="save-walk-in-btn" class="w-full px-4 py-2 font-semibold text-white bg-green-600 rounded-lg mt-4">Generate & Save Hours</button>
                 <p id="walk-in-status" class="text-sm text-center mt-2 h-4"></p>
             </div>
         </div>
@@ -96,12 +90,11 @@
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Corrected Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyA30A5Qh43IVxy0ZJnVTW9rtvYZG7Cp8-s",
             authDomain: "area-59-makerspace.firebaseapp.com",
             projectId: "area-59-makerspace",
-            storageBucket: "area-59-makerspace.firebasestorage.app", // Corrected URL
+            storageBucket: "area-59-makerspace.firebasestorage.app",
             messagingSenderId: "721728366959",
             appId: "1:721728366959:web:8a6513baa852e5699b609a",
             measurementId: "G-8RFF3XJWFL"
@@ -114,7 +107,6 @@
         const loginForm = document.getElementById('login-form');
         const loginError = document.getElementById('login-error');
 
-        // Initialize Firebase on page load for early feedback
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const app = initializeApp(firebaseConfig);
@@ -122,10 +114,15 @@
                 const auth = getAuth(app);
                 await signInAnonymously(auth);
                 isFirebaseConnected = true;
-                console.log("Firebase connected successfully on page load.");
+                console.log("Firebase connected successfully.");
+                renderWalkInForm();
             } catch (error) {
                 console.error("Firebase Initialization Error:", error);
-                loginError.textContent = "Could not connect to Firebase. Check console.";
+                if (error.code === 'auth/operation-not-allowed') {
+                    loginError.innerHTML = `<strong>Connection Error:</strong> 'Anonymous' sign-in is not enabled.`;
+                } else {
+                    loginError.textContent = "Could not connect to Firebase.";
+                }
                 loginError.classList.remove('hidden');
             }
         });
@@ -133,48 +130,82 @@
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             loginError.classList.add('hidden');
-
             if (document.getElementById('password-input').value !== password) {
                 loginError.textContent = "Incorrect password.";
                 loginError.classList.remove('hidden');
                 return;
             }
-
             if (isFirebaseConnected) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-content').style.display = 'block';
             } else {
-                 loginError.textContent = "Could not connect to Firebase. Check console.";
                  loginError.classList.remove('hidden');
             }
         });
+        
+        function renderWalkInForm() {
+            const form = document.getElementById('walk-in-form');
+            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            days.forEach((day, index) => {
+                const dayRow = document.createElement('div');
+                dayRow.className = 'flex items-center gap-2 day-row';
+                dayRow.dataset.day = index; // 0 for Sunday, 1 for Monday, etc.
+                dayRow.innerHTML = `
+                    <input type="checkbox" id="day-enable-${index}" class="day-enable h-5 w-5 rounded focus:ring-blue-500">
+                    <label for="day-enable-${index}" class="font-semibold w-24 text-sm">${day}</label>
+                    <input type="time" class="start-time w-full p-1 text-sm rounded-md border-slate-300 bg-slate-100" disabled>
+                    <span class="text-slate-500">-</span>
+                    <input type="time" class="end-time w-full p-1 text-sm rounded-md border-slate-300 bg-slate-100" disabled>
+                `;
+                form.appendChild(dayRow);
+            });
 
-        // Walk-in hours form logic
-        const walkInForm = document.getElementById('walk-in-form');
-        walkInForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+            form.addEventListener('change', e => {
+                if (e.target.classList.contains('day-enable')) {
+                    const row = e.target.closest('.day-row');
+                    const timeInputs = row.querySelectorAll('input[type="time"]');
+                    timeInputs.forEach(input => {
+                        input.disabled = !e.target.checked;
+                        input.classList.toggle('bg-slate-100', !e.target.checked);
+                    });
+                }
+            });
+        }
+
+        const saveWalkInBtn = document.getElementById('save-walk-in-btn');
+        saveWalkInBtn.addEventListener('click', async () => {
             if (!isFirebaseConnected) {
                 alert("Not connected to database.");
                 return;
             }
-
             const statusEl = document.getElementById('walk-in-status');
             statusEl.textContent = 'Saving...';
-
-            const dayOfWeek = parseInt(document.getElementById('day-of-week').value);
-            const startTime = document.getElementById('start-time').value;
-            const endTime = document.getElementById('end-time').value;
+            
+            const weeklySchedule = {};
+            document.querySelectorAll('.day-row').forEach(row => {
+                const checkbox = row.querySelector('.day-enable');
+                if (checkbox.checked) {
+                    const dayIndex = row.dataset.day;
+                    const startTime = row.querySelector('.start-time').value;
+                    const endTime = row.querySelector('.end-time').value;
+                    if (startTime && endTime) {
+                        weeklySchedule[dayIndex] = { startTime, endTime };
+                    }
+                }
+            });
 
             const hours = [];
             const today = new Date();
             for (let i = 0; i < 14; i++) {
                 const date = new Date(today);
                 date.setDate(today.getDate() + i);
-                if (date.getDay() === dayOfWeek) {
+                const dayOfWeek = date.getDay();
+                
+                if (weeklySchedule[dayOfWeek]) {
                     hours.push({
                         date: date.toISOString().split('T')[0],
-                        startTime,
-                        endTime
+                        startTime: weeklySchedule[dayOfWeek].startTime,
+                        endTime: weeklySchedule[dayOfWeek].endTime
                     });
                 }
             }
@@ -190,7 +221,6 @@
                 setTimeout(() => statusEl.textContent = '', 4000);
             }
         });
-
     </script>
 </body>
 </html>
