@@ -18,30 +18,46 @@
         }
         #main-content { display: none; }
 
-        /* Print Styles */
+        /* Screen Styles */
+        #printable-area {
+            display: none;
+        }
+
+        /* Print Styles - Rewritten for reliability */
         @media print {
-            body * {
-                visibility: hidden;
+            /* Hide everything in the body that is NOT the printable area */
+            body > *:not(#printable-area) {
+                display: none;
             }
-            #printable-area, #printable-area * {
-                visibility: visible;
-            }
+            
+            /* Show the printable area and ensure it's the only thing on the page */
             #printable-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
+                display: block;
+                position: static; /* Let it flow naturally */
             }
+
+            /* Basic table styling for the printout */
             table {
                 width: 100%;
                 border-collapse: collapse;
+                font-size: 10pt;
             }
             th, td {
-                border: 1px solid #ddd;
-                padding: 8px;
+                border: 1px solid #666;
+                padding: 4px;
+                text-align: left;
             }
             th {
-                background-color: #f2f2f2;
+                background-color: #eee;
+                font-weight: bold;
+            }
+            h1, h2 {
+                color: black;
+                margin-top: 20px;
+                border-bottom: 1px solid #ccc;
+            }
+            p {
+                color: black;
             }
         }
     </style>
@@ -88,7 +104,7 @@
     </div>
     
     <!-- Area for the printable report -->
-    <div id="printable-area" class="hidden"></div>
+    <div id="printable-area"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -333,9 +349,8 @@
             for (const category in inventoryData) {
                 const consumables = inventoryData[category].consumables;
                 if (consumables && consumables.length > 0) {
-                    printHTML += `<h2 style="margin-top: 20px; border-bottom: 1px solid #ccc;">${category}</h2><table><thead><tr>
-                        <th>Name</th><th>Qty</th><th>Model #</th><th>For Machine</th><th>Price</th>
-                    </tr></thead><tbody>`;
+                    printHTML += `<h2>${category}</h2>`;
+                    printHTML += `<table><thead><tr><th>Name</th><th>Qty</th><th>Model #</th><th>For Machine</th><th>Price</th></tr></thead><tbody>`;
                     consumables.forEach(item => {
                         printHTML += `<tr>
                             <td>${item.name || ''}</td><td>${item.quantity || ''}</td><td>${item.modelNumber || ''}</td>
