@@ -17,13 +17,43 @@
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
+            position: relative; /* Needed for delete button */
         }
         .timeslot.approved { background-color: #ef4444; } /* red-500 */
         .timeslot.walk-in { background-color: #22c55e; } /* green-500 */
-        #request-modal { display: none; }
+        .delete-btn {
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 1.2rem;
+            line-height: 1;
+            font-weight: bold;
+            color: white;
+            opacity: 0.7;
+            cursor: pointer;
+            display: none; /* Hidden by default */
+        }
+        .delete-btn:hover { opacity: 1; }
+        body.admin-mode .delete-btn { display: block; } /* Show in admin mode */
+        #request-modal, #admin-login-modal { display: none; }
     </style>
 </head>
 <body class="text-slate-800">
+
+    <!-- Admin Login Modal -->
+    <div id="admin-login-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm space-y-4">
+            <h2 class="text-xl font-bold text-center">Admin Login</h2>
+            <form id="admin-login-form">
+                <input type="password" id="admin-password" placeholder="Password" required class="w-full px-4 py-2 rounded-lg border-slate-300">
+                <div class="flex gap-4 mt-4">
+                    <button type="button" id="cancel-admin-login" class="w-full py-2 bg-slate-200 rounded-lg">Cancel</button>
+                    <button type="submit" class="w-full py-2 bg-blue-600 text-white rounded-lg">Login</button>
+                </div>
+                <p id="admin-login-error" class="text-red-500 text-sm text-center hidden mt-2">Incorrect password.</p>
+            </form>
+        </div>
+    </div>
 
     <!-- Request Modal -->
     <div id="request-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -66,7 +96,7 @@
 
 
     <div class="container mx-auto p-4 sm:p-6 md:p-8">
-        <header class="text-center mb-8">
+        <header class="text-center mb-8 relative">
              <a href="index.html"><img src="Area_59_Logo_Color_3x1.png" alt="Area 59 Logo" class="mx-auto h-20 mb-4"></a>
             <h1 class="text-4xl font-bold text-slate-900">Machine Schedule</h1>
             <p class="text-slate-600 mt-2">View the calendar for machine availability and click a day to request a time slot.</p>
@@ -74,6 +104,7 @@
                 <span class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-red-500"></div> Booked Appointment</span>
                 <span class="flex items-center gap-2"><div class="w-4 h-4 rounded-full bg-green-500"></div> Walk-in Hours</span>
             </div>
+            <button id="admin-login-btn" class="absolute top-0 right-0 text-sm text-slate-500 hover:text-slate-800">Admin</button>
         </header>
 
          <div class="flex items-center justify-center mb-6 gap-4">
@@ -87,10 +118,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Corrected Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyA30A5Qh43IVxy0ZJnVTW9rtvYZG7Cp8-s",
             authDomain: "area-59-makerspace.firebaseapp.com",
@@ -108,7 +138,7 @@
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 const auth = getAuth(app);
-                await signInAnonymously(auth); // Needed for security rules
+                await signInAnonymously(auth);
                 
                 await Promise.all([loadAppointments(), loadInventory(), loadWalkInHours()]);
                 
@@ -125,7 +155,9 @@
         async function loadAppointments() {
             appointments = [];
             const querySnapshot = await getDocs(collection(db, "public_appointments"));
-            querySnapshot.forEach((doc) => appointments.push(doc.data()));
+            querySnapshot.forEach((doc) => {
+                appointments.push({ id: doc.id, ...doc.data() }); // Store the ID
+            });
         }
 
         async function loadInventory() {
@@ -156,7 +188,6 @@
             }
 
             for (const category in inventory) {
-                // Check for machines array first, then fall back to items array
                 const items = inventory[category].machines || inventory[category].items || [];
                 if (items.length > 0) {
                     const optgroup = document.createElement('optgroup');
@@ -211,8 +242,11 @@
                 dayAppts.forEach(appt => {
                     const apptDiv = document.createElement('div');
                     apptDiv.className = 'timeslot approved';
-                    apptDiv.textContent = `${appt.startTime} - ${appt.machine}`;
                     apptDiv.title = `${appt.name} - ${appt.machine}`;
+                    apptDiv.innerHTML = `
+                        ${appt.startTime} - ${appt.machine}
+                        <span class="delete-btn" data-id="${appt.id}">&times;</span>
+                    `;
                     dayEl.appendChild(apptDiv);
                 });
                 
@@ -223,6 +257,7 @@
         // Modal Logic
         const modal = document.getElementById('request-modal');
         document.getElementById('calendar').addEventListener('click', (e) => {
+            if (document.body.classList.contains('admin-mode')) return; // Don't open modal in admin mode
             const dayEl = e.target.closest('.calendar-day');
             if (dayEl) {
                 const day = dayEl.dataset.day;
@@ -246,7 +281,7 @@
                 endTime: document.getElementById('end-time').value,
                 name: document.getElementById('member-name').value,
                 email: document.getElementById('member-email').value,
-                isMember: true, // This is the member page
+                isMember: true,
                 status: 'pending'
             };
 
@@ -265,6 +300,50 @@
                  submitBtn.disabled = false;
             }
         });
+        
+        // Admin & Deletion Logic
+        const adminLoginBtn = document.getElementById('admin-login-btn');
+        const adminModal = document.getElementById('admin-login-modal');
+        const adminLoginForm = document.getElementById('admin-login-form');
+        const cancelAdminLogin = document.getElementById('cancel-admin-login');
+
+        adminLoginBtn.addEventListener('click', () => adminModal.style.display = 'flex');
+        cancelAdminLogin.addEventListener('click', () => adminModal.style.display = 'none');
+
+        adminLoginForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const password = document.getElementById('admin-password').value;
+            const errorEl = document.getElementById('admin-login-error');
+            if (password === "Pronghorn@59") {
+                document.body.classList.add('admin-mode');
+                adminModal.style.display = 'none';
+                errorEl.classList.add('hidden');
+                document.getElementById('admin-password').value = '';
+            } else {
+                errorEl.classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('calendar').addEventListener('click', async e => {
+            if (e.target.classList.contains('delete-btn')) {
+                const appointmentId = e.target.dataset.id;
+                if (confirm("Are you sure you want to delete this appointment?")) {
+                    await deleteAppointment(appointmentId);
+                    await loadAppointments();
+                    renderCalendar();
+                }
+            }
+        });
+
+        async function deleteAppointment(id) {
+            try {
+                await deleteDoc(doc(db, "public_appointments", id));
+                console.log("Deleted appointment:", id);
+            } catch (error) {
+                console.error("Error deleting appointment:", error);
+                alert("Could not delete appointment.");
+            }
+        }
         
         document.getElementById('prev-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
         document.getElementById('next-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
