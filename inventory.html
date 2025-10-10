@@ -28,7 +28,7 @@
                 <input type="password" id="password-input" placeholder="Password" required class="w-full px-4 py-2 rounded-lg border-slate-300">
                 <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Unlock</button>
             </form>
-            <p id="login-error" class="text-red-500 text-sm text-center hidden">Incorrect password.</p>
+            <p id="login-error" class="text-red-500 text-sm text-center hidden">Incorrect password or connection error.</p>
              <div class="text-center">
                 <a href="admin.html" class="text-sm text-blue-600 hover:underline">&larr; Back to Admin Dashboard</a>
             </div>
@@ -41,7 +41,9 @@
             <p class="text-slate-700 mt-2">Add, remove, and update the equipment, materials, and software available at Area 59.</p>
         </header>
 
-        <div id="inventory-container" class="space-y-6"></div>
+        <div id="inventory-container" class="space-y-6">
+            <p class="text-center font-medium p-8 bg-white/80 rounded-lg shadow">Loading inventory from database...</p>
+        </div>
 
         <div class="mt-8 content-panel p-6 rounded-xl shadow-md">
             <h3 class="text-xl font-semibold mb-4">Add New Category</h3>
@@ -53,7 +55,7 @@
         
         <div class="mt-8 text-center">
              <button id="save-inventory-btn" class="w-full max-w-xs px-6 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save to Database</button>
-             <p id="save-status" class="text-green-600 mt-4 font-medium"></p>
+             <p id="save-status" class="text-green-600 mt-4 font-medium h-6"></p>
         </div>
     </div>
 
@@ -62,6 +64,7 @@
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
+        // Cleaned Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyA30A5Qh43IVxy0ZJnVTW9rtvYZG7Cp8-s",
             authDomain: "area-59-makerspace.firebaseapp.com",
@@ -75,17 +78,8 @@
         let db, auth, inventoryDocRef;
         let inventoryData = {};
 
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (document.getElementById('password-input').value === "Pronghorn@59") {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-                await initializeFirebase();
-                loadInventory();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        });
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
 
         async function initializeFirebase() {
              try {
@@ -94,8 +88,33 @@
                 auth = getAuth(app);
                 await signInAnonymously(auth);
                 inventoryDocRef = doc(db, 'inventory', 'main');
-            } catch (e) { console.error("Firebase Error", e); }
+                return true;
+            } catch (e) { 
+                console.error("Firebase Initialization Error:", e);
+                loginError.textContent = "Could not connect to Firebase. Check console.";
+                loginError.classList.remove('hidden');
+                return false;
+            }
         }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loginError.classList.add('hidden');
+
+            if (document.getElementById('password-input').value !== "Pronghorn@59") {
+                loginError.textContent = "Incorrect password.";
+                loginError.classList.remove('hidden');
+                return;
+            }
+            
+            const connected = await initializeFirebase();
+            if(connected) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                loadInventory();
+            }
+        });
+
 
         async function loadInventory() {
             try {
@@ -103,12 +122,13 @@
                 if (docSnap.exists()) {
                     inventoryData = docSnap.data().data;
                 } else {
-                    // Default data if none exists
-                    inventoryData = { "Software": { "items": [] } };
+                    console.warn("No inventory document found. Using an empty object.");
+                    inventoryData = { "Software": { "items": ["Default Item"] } };
                 }
                 renderInventory();
             } catch (error) {
                 console.error("Error loading inventory:", error);
+                document.getElementById('inventory-container').innerHTML = `<p class="text-center text-red-500">Error loading inventory. Check security rules and console.</p>`;
             }
         }
         
@@ -128,26 +148,26 @@
             let contentHTML = `
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl font-bold">${categoryName}</h2>
-                    <button class="remove-category-btn text-red-500 hover:text-red-700" data-category="${categoryName}">Remove Category</button>
+                    <button class="remove-category-btn text-red-500 hover:text-red-700 font-bold text-lg" data-category="${categoryName}">Remove Category</button>
                 </div>`;
 
             if (categoryData.hasOwnProperty('machines')) {
                 contentHTML += `
                     <h3 class="text-lg font-semibold mb-2">Machines</h3>
                     <ul class="list-disc list-inside space-y-2 mb-4">
-                        ${(categoryData.machines || []).map(item => `<li><span>${item}</span> <button class="remove-item-btn text-red-500" data-category="${categoryName}" data-item="${item}" data-list-type="machines">x</button></li>`).join('')}
+                        ${(categoryData.machines || []).map(item => `<li><span>${item}</span> <button class="remove-item-btn text-red-500 font-bold ml-2" data-category="${categoryName}" data-item="${item}" data-list-type="machines">x</button></li>`).join('')}
                     </ul>
                     <div class="flex gap-4 mb-6"><input type="text" class="new-item-input flex-grow rounded-md"><button class="add-item-btn bg-blue-500 text-white px-3 rounded-md" data-category="${categoryName}" data-list-type="machines">Add Machine</button></div><hr class="my-4">`;
                 contentHTML += `
                     <h3 class="text-lg font-semibold mb-2">Available Materials</h3>
                     <ul class="list-disc list-inside space-y-2 mb-4">
-                         ${(categoryData.materials || []).map(item => `<li><span>${item}</span> <button class="remove-item-btn text-red-500" data-category="${categoryName}" data-item="${item}" data-list-type="materials">x</button></li>`).join('')}
+                         ${(categoryData.materials || []).map(item => `<li><span>${item}</span> <button class="remove-item-btn text-red-500 font-bold ml-2" data-category="${categoryName}" data-item="${item}" data-list-type="materials">x</button></li>`).join('')}
                     </ul>
                     <div class="flex gap-4"><input type="text" class="new-item-input flex-grow rounded-md"><button class="add-item-btn bg-blue-500 text-white px-3 rounded-md" data-category="${categoryName}" data-list-type="materials">Add Material</button></div>`;
             } else {
                 contentHTML += `
                     <ul class="list-disc list-inside space-y-2 mb-4">
-                        ${(categoryData.items || []).map(item => `<li><span>${item}</span> <button class="remove-item-btn text-red-500" data-category="${categoryName}" data-item="${item}" data-list-type="items">x</button></li>`).join('')}
+                        ${(categoryData.items || []).map(item => `<li><span>${item}</span> <button class="remove-item-btn text-red-500 font-bold ml-2" data-category="${categoryName}" data-item="${item}" data-list-type="items">x</button></li>`).join('')}
                     </ul>
                     <div class="flex gap-4"><input type="text" class="new-item-input flex-grow rounded-md"><button class="add-item-btn bg-blue-500 text-white px-3 rounded-md" data-category="${categoryName}" data-list-type="items">Add Item</button></div>`;
             }
@@ -197,17 +217,18 @@
             const saveStatus = document.getElementById('save-status');
             saveBtn.disabled = true;
             saveBtn.textContent = 'Saving...';
+            saveStatus.textContent = '';
             
             try {
                 await setDoc(inventoryDocRef, { data: inventoryData });
                 saveStatus.textContent = 'Inventory saved successfully!';
-                setTimeout(() => saveStatus.textContent = '', 4000);
             } catch (e) {
                 console.error("Error saving inventory:", e);
                 saveStatus.textContent = 'Error saving. Check console.';
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.textContent = 'Save to Database';
+                setTimeout(() => saveStatus.textContent = '', 4000);
             }
         });
 
