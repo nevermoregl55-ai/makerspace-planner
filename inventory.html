@@ -273,10 +273,35 @@
 
         document.getElementById('inventory-container').addEventListener('click', e => {
             const target = e.target;
-            const category = target.dataset.category;
-            const listType = target.dataset.listType;
-
-            if (target.classList.contains('add-item-btn')) {
+            
+            // Refactored logic to be more robust
+            if (target.classList.contains('add-consumable-btn')) {
+                const form = target.closest('.add-consumable-form');
+                const category = form.dataset.category;
+                const newConsumable = {
+                    name: form.querySelector('.consumable-name').value,
+                    quantity: form.querySelector('.consumable-quantity').value,
+                    modelNumber: form.querySelector('.consumable-model').value,
+                    machine: form.querySelector('.consumable-machine').value,
+                    price: form.querySelector('.consumable-price').value,
+                };
+                if (!newConsumable.name) {
+                    alert("Consumable name cannot be empty.");
+                    return;
+                }
+                if (!inventoryData[category].consumables) inventoryData[category].consumables = [];
+                inventoryData[category].consumables.push(newConsumable);
+                renderInventory();
+            } else if (target.classList.contains('remove-consumable-btn')) {
+                const category = target.dataset.category;
+                const index = parseInt(target.dataset.index);
+                if (category && !isNaN(index)) {
+                    inventoryData[category].consumables.splice(index, 1);
+                    renderInventory();
+                }
+            } else if (target.classList.contains('add-item-btn')) {
+                const category = target.dataset.category;
+                const listType = target.dataset.listType;
                 const input = target.previousElementSibling;
                 const newItem = input.value.trim();
                 if (newItem && category && listType) {
@@ -286,32 +311,19 @@
                     renderInventory();
                 }
             } else if (target.classList.contains('remove-item-btn')) {
+                const category = target.dataset.category;
+                const listType = target.dataset.listType;
                 const itemToRemove = target.dataset.item;
                 if (category && itemToRemove && listType) {
                     inventoryData[category][listType] = inventoryData[category][listType].filter(item => item !== itemToRemove);
                     renderInventory();
                 }
             } else if (target.classList.contains('remove-category-btn')) {
+                const category = target.dataset.category;
                 if (category) {
                     delete inventoryData[category];
                     renderInventory();
                 }
-            } else if (target.classList.contains('add-consumable-btn')) {
-                const form = target.closest('.add-consumable-form');
-                const newConsumable = {
-                    name: form.querySelector('.consumable-name').value,
-                    quantity: form.querySelector('.consumable-quantity').value,
-                    modelNumber: form.querySelector('.consumable-model').value,
-                    machine: form.querySelector('.consumable-machine').value,
-                    price: form.querySelector('.consumable-price').value,
-                };
-                if (!inventoryData[category].consumables) inventoryData[category].consumables = [];
-                inventoryData[category].consumables.push(newConsumable);
-                renderInventory();
-            } else if (target.classList.contains('remove-consumable-btn')) {
-                const index = parseInt(target.dataset.index);
-                inventoryData[category].consumables.splice(index, 1);
-                renderInventory();
             }
         });
         
