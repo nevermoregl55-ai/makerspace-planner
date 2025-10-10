@@ -84,15 +84,20 @@
     </div>
 
     <script type="module">
-        // Same as previous admin.html script
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
+        // Your web app's Firebase configuration
         const firebaseConfig = {
-            /* PASTE YOUR FIREBASE CONFIG OBJECT HERE */
+            apiKey: "AIzaSyA30A5Qh43IVxy0ZJnVTW9rtvYZG7Cp8-s",
+            authDomain: "area-59-makerspace.firebaseapp.com",
+            projectId: "area-59-makerspace",
+            storageBucket: "area-59-makerspace.appspot.com",
+            messagingSenderId: "721728366959",
+            appId: "1:721728366959:web:8a6513baa852e5699b609a",
+            measurementId: "G-8RFF3XJWFL"
         };
-        // ... rest of the script from previous admin.html is the same
         
         let db, auth;
 
