@@ -84,6 +84,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, getDocs, doc, deleteDoc, query, where, writeBatch, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyA30A5Qh43IVxy0ZJnVTW9rtvYZG7Cp8-s",
@@ -101,6 +102,9 @@
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
+                const auth = getAuth(app);
+                await signInAnonymously(auth); // This line is crucial for write/delete permissions
+                
                 await loadClasses();
                 renderCalendar();
             } catch (error) { 
@@ -236,8 +240,11 @@
                 const classRef = doc(db, "classes", id);
                 await updateDoc(classRef, { currentSize: newSize });
                 statusEl.textContent = 'Updated successfully!';
-                // Update local data and re-render
-                await loadClasses();
+                
+                // Update local data before re-rendering for instant feedback
+                const classToUpdate = classes.find(c => c.id === id);
+                if(classToUpdate) classToUpdate.currentSize = newSize;
+                
                 renderCalendar();
                 setTimeout(() => {
                     classDetailsModal.style.display = 'none';
@@ -276,7 +283,7 @@
                 const classId = e.target.dataset.id;
                 const seriesId = e.target.dataset.seriesId;
                 if (!confirm("Are you sure you want to delete this class?")) return;
-                if (seriesId && confirm("Delete entire series?")) {
+                if (seriesId && confirm("This is part of a series. Delete the ENTIRE series?")) {
                     await deleteClassSeries(seriesId);
                 } else {
                     await deleteSingleClass(classId);
@@ -308,5 +315,4 @@
     </script>
 </body>
 </html>
-
 
