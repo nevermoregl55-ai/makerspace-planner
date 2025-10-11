@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Area 59 - Admin Dashboard</title>
+    <title>Area 59 - Manage Members</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -17,12 +17,8 @@
             backdrop-filter: blur(10px);
         }
         #main-content { display: none; }
-        .dashboard-card {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-        .dashboard-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        .member-item:hover {
+            background-color: rgba(239, 246, 255, 1); /* blue-50 */
         }
     </style>
 </head>
@@ -30,69 +26,79 @@
 
     <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-md p-8 space-y-6 rounded-2xl shadow-lg login-panel">
-            <div class="text-center">
-                <img src="Area_59_Logo_Color_3x1.png" alt="Area 59 Logo" class="mx-auto h-16 mb-4">
-                <h1 class="text-2xl font-bold text-slate-900">Admin Access</h1>
-                <p class="text-slate-600">Enter the admin password to continue.</p>
-            </div>
+            <h1 class="text-2xl font-bold text-slate-900 text-center">Admin Access</h1>
             <form id="login-form" class="space-y-4">
-                <div>
-                    <input type="password" id="password-input" placeholder="Password" required class="w-full px-4 py-2 text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
-                </div>
-                <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">Unlock</button>
+                <input type="password" id="password-input" placeholder="Password" required class="w-full px-4 py-2 rounded-lg border-slate-300">
+                <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Unlock</button>
             </form>
-            <p id="login-error" class="text-red-500 text-sm text-center hidden">Incorrect password or connection error.</p>
+            <p id="login-error" class="text-red-500 text-sm text-center hidden"></p>
+            <div class="text-center">
+                <a href="admin.html" class="text-sm text-blue-600 hover:underline">&larr; Back to Admin Dashboard</a>
+            </div>
         </div>
     </div>
 
-    <div id="main-content" class="container mx-auto max-w-4xl p-4 sm:p-6 md:p-8">
+    <div id="main-content" class="container mx-auto max-w-6xl p-4 sm:p-6 md:p-8">
         <header class="text-center mb-8 p-6 rounded-xl content-panel shadow-md">
-            <h1 class="text-4xl font-bold text-slate-900">Admin Dashboard</h1>
-            <p class="text-slate-700 mt-2">Select a task to continue.</p>
-            <a href="project_planner.html" class="text-blue-600 hover:underline mt-4 inline-block font-medium">View Public Project Planner &rarr;</a>
+            <h1 class="text-4xl font-bold text-slate-900">Manage Members</h1>
+            <p class="text-slate-700 mt-2">Create new member accounts and view/edit existing member information.</p>
         </header>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <a href="inventory.html" class="dashboard-card block p-8 rounded-2xl shadow-lg bg-white/80">
-                <h2 class="text-2xl font-bold text-slate-800">Manage Inventory</h2>
-                <p class="mt-2 text-slate-600">Update the list of available machines, materials, and software.</p>
-            </a>
-            <a href="manage_members.html" class="dashboard-card block p-8 rounded-2xl shadow-lg bg-white/80">
-                <h2 class="text-2xl font-bold text-slate-800">Manage Members</h2>
-                <p class="mt-2 text-slate-600">Create new member accounts and view/edit member profiles.</p>
-            </a>
-            <a href="approve_projects.html" class="dashboard-card block p-8 rounded-2xl shadow-lg bg-white/80">
-                <h2 class="text-2xl font-bold text-slate-800">Approve Projects</h2>
-                <p class="mt-2 text-slate-600">Review and publish new projects to the public gallery.</p>
-            </a>
-             <a href="add_project.html" class="dashboard-card block p-8 rounded-2xl shadow-lg bg-white/80">
-                <h2 class="text-2xl font-bold text-slate-800">Add a Project</h2>
-                <p class="mt-2 text-slate-600">Log a completed project into the database approval queue.</p>
-            </a>
-            <a href="approve_appointments.html" class="dashboard-card block p-8 rounded-2xl shadow-lg bg-white/80">
-                <h2 class="text-2xl font-bold text-slate-800">Approve Appointments</h2>
-                <p class="mt-2 text-slate-600">Manage pending appointment requests from members and non-members.</p>
-            </a>
-             <a href="add_class.html" class="dashboard-card block p-8 rounded-2xl shadow-lg bg-white/80">
-                <h2 class="text-2xl font-bold text-slate-800">Add a Class</h2>
-                <p class="mt-2 text-slate-600">Add a new class or event to the public calendar.</p>
-            </a>
-            <div class="dashboard-card p-8 rounded-2xl shadow-lg bg-white/80">
-                <h2 class="text-2xl font-bold text-slate-800">Set Walk-in Hours</h2>
-                <p class="mt-2 text-slate-600 mb-4">Set a weekly schedule. This will generate walk-in slots for the next 14 days.</p>
-                <form id="walk-in-form" class="space-y-2">
-                    <!-- Day rows will be injected here by JS -->
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Member List -->
+            <div class="lg:col-span-1 content-panel p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4">Member List</h2>
+                <div id="member-list" class="space-y-2 h-96 overflow-y-auto">
+                    <p>Loading members...</p>
+                </div>
+            </div>
+
+            <!-- Member Form -->
+            <div class="lg:col-span-2 content-panel p-6 rounded-xl shadow-lg">
+                <h2 id="form-title" class="text-2xl font-bold mb-4">Add New Member</h2>
+                <form id="member-form" class="space-y-4">
+                    <input type="hidden" id="member-id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="member-name" class="block text-sm font-medium">Full Name</label>
+                            <input type="text" id="member-name" required class="mt-1 block w-full rounded-md border-slate-300">
+                        </div>
+                        <div>
+                            <label for="member-phone" class="block text-sm font-medium">Phone Number</label>
+                            <input type="tel" id="member-phone" class="mt-1 block w-full rounded-md border-slate-300">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="member-address" class="block text-sm font-medium">Address</label>
+                        <input type="text" id="member-address" class="mt-1 block w-full rounded-md border-slate-300">
+                    </div>
+                    <hr class="my-4">
+                    <h3 class="text-lg font-semibold">Login Credentials</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="member-email" class="block text-sm font-medium">Email (for login)</label>
+                            <input type="email" id="member-email" required class="mt-1 block w-full rounded-md border-slate-300">
+                        </div>
+                        <div>
+                            <label for="member-password" class="block text-sm font-medium">Password</label>
+                            <input type="password" id="member-password" required class="mt-1 block w-full rounded-md border-slate-300">
+                        </div>
+                    </div>
+                    <div class="pt-4 flex items-center gap-4">
+                        <button type="submit" id="save-member-btn" class="px-6 py-2 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save Member</button>
+                        <button type="button" id="clear-form-btn" class="px-4 py-2 font-semibold text-slate-700 bg-slate-200 rounded-lg hover:bg-slate-300">New Member</button>
+                        <button type="button" id="delete-member-btn" class="hidden px-4 py-2 font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700">Delete Member</button>
+                    </div>
                 </form>
-                <button id="save-walk-in-btn" class="w-full px-4 py-2 font-semibold text-white bg-green-600 rounded-lg mt-4">Generate & Save Hours</button>
-                <p id="walk-in-status" class="text-sm text-center mt-2 h-4"></p>
+                <p id="form-status" class="mt-4 h-6 font-medium"></p>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA30A5Qh43IVxy0ZJnVTW9rtvYZG7Cp8-s",
@@ -104,127 +110,163 @@
             measurementId: "G-8RFF3XJWFL"
         };
         
-        let db;
+        let db, auth;
         let isFirebaseConnected = false;
 
-        const password = "Pronghorn@59";
         const loginForm = document.getElementById('login-form');
         const loginError = document.getElementById('login-error');
 
         document.addEventListener('DOMContentLoaded', async () => {
-            try {
+             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
-                const auth = getAuth(app);
+                auth = getAuth(app);
                 await signInAnonymously(auth);
                 isFirebaseConnected = true;
-                console.log("Firebase connected successfully.");
-                renderWalkInForm();
             } catch (error) {
-                console.error("Firebase Initialization Error:", error);
-                if (error.code === 'auth/operation-not-allowed') {
-                    loginError.innerHTML = `<strong>Connection Error:</strong> 'Anonymous' sign-in is not enabled.`;
-                } else {
-                    loginError.textContent = "Could not connect to Firebase.";
-                }
+                loginError.textContent = "Could not connect to Firebase.";
                 loginError.classList.remove('hidden');
-            }
-        });
-
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            loginError.classList.add('hidden');
-            if (document.getElementById('password-input').value !== password) {
-                loginError.textContent = "Incorrect password.";
-                loginError.classList.remove('hidden');
-                return;
-            }
-            if (isFirebaseConnected) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-content').style.display = 'block';
-            } else {
-                 loginError.classList.remove('hidden');
             }
         });
         
-        function renderWalkInForm() {
-            const form = document.getElementById('walk-in-form');
-            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-            days.forEach((day, index) => {
-                const dayRow = document.createElement('div');
-                dayRow.className = 'flex items-center gap-2 day-row';
-                dayRow.dataset.day = index; // 0 for Sunday, 1 for Monday, etc.
-                dayRow.innerHTML = `
-                    <input type="checkbox" id="day-enable-${index}" class="day-enable h-5 w-5 rounded focus:ring-blue-500">
-                    <label for="day-enable-${index}" class="font-semibold w-24 text-sm">${day}</label>
-                    <input type="time" class="start-time w-full p-1 text-sm rounded-md border-slate-300 bg-slate-100" disabled>
-                    <span class="text-slate-500">-</span>
-                    <input type="time" class="end-time w-full p-1 text-sm rounded-md border-slate-300 bg-slate-100" disabled>
-                `;
-                form.appendChild(dayRow);
-            });
-
-            form.addEventListener('change', e => {
-                if (e.target.classList.contains('day-enable')) {
-                    const row = e.target.closest('.day-row');
-                    const timeInputs = row.querySelectorAll('input[type="time"]');
-                    timeInputs.forEach(input => {
-                        input.disabled = !e.target.checked;
-                        input.classList.toggle('bg-slate-100', !e.target.checked);
-                    });
-                }
-            });
-        }
-
-        const saveWalkInBtn = document.getElementById('save-walk-in-btn');
-        saveWalkInBtn.addEventListener('click', async () => {
-            if (!isFirebaseConnected) {
-                alert("Not connected to database.");
-                return;
-            }
-            const statusEl = document.getElementById('walk-in-status');
-            statusEl.textContent = 'Saving...';
-            
-            const weeklySchedule = {};
-            document.querySelectorAll('.day-row').forEach(row => {
-                const checkbox = row.querySelector('.day-enable');
-                if (checkbox.checked) {
-                    const dayIndex = row.dataset.day;
-                    const startTime = row.querySelector('.start-time').value;
-                    const endTime = row.querySelector('.end-time').value;
-                    if (startTime && endTime) {
-                        weeklySchedule[dayIndex] = { startTime, endTime };
-                    }
-                }
-            });
-
-            const hours = [];
-            const today = new Date();
-            for (let i = 0; i < 14; i++) {
-                const date = new Date(today);
-                date.setDate(today.getDate() + i);
-                const dayOfWeek = date.getDay();
-                
-                if (weeklySchedule[dayOfWeek]) {
-                    hours.push({
-                        date: date.toISOString().split('T')[0],
-                        startTime: weeklySchedule[dayOfWeek].startTime,
-                        endTime: weeklySchedule[dayOfWeek].endTime
-                    });
-                }
-            }
-
-            try {
-                const walkInDocRef = doc(db, 'walk_in_hours', 'schedule');
-                await setDoc(walkInDocRef, { hours });
-                statusEl.textContent = 'Walk-in hours saved!';
-            } catch (error) {
-                console.error("Error saving walk-in hours:", error);
-                statusEl.textContent = 'Error saving. Check console.';
-            } finally {
-                setTimeout(() => statusEl.textContent = '', 4000);
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (document.getElementById('password-input').value === "Pronghorn@59" && isFirebaseConnected) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                loadMembers();
+            } else {
+                loginError.textContent = "Incorrect password or connection failed.";
+                loginError.classList.remove('hidden');
             }
         });
+
+        const memberList = document.getElementById('member-list');
+        const memberForm = document.getElementById('member-form');
+        const formTitle = document.getElementById('form-title');
+        const formStatus = document.getElementById('form-status');
+        const deleteBtn = document.getElementById('delete-member-btn');
+        const memberIdInput = document.getElementById('member-id');
+        const memberEmailInput = document.getElementById('member-email');
+        const memberPasswordInput = document.getElementById('member-password');
+
+        async function loadMembers() {
+            memberList.innerHTML = '<p>Loading members...</p>';
+            try {
+                const querySnapshot = await getDocs(collection(db, "members"));
+                memberList.innerHTML = '';
+                if (querySnapshot.empty) {
+                    memberList.innerHTML = '<p class="text-slate-500">No members found.</p>';
+                    return;
+                }
+                const members = [];
+                querySnapshot.forEach(doc => members.push({ id: doc.id, ...doc.data() }));
+                members.sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
+                
+                members.forEach(member => {
+                    const memberEl = document.createElement('div');
+                    memberEl.className = 'member-item p-2 rounded-md cursor-pointer border border-transparent hover:border-blue-300';
+                    memberEl.textContent = member.name || member.email;
+                    memberEl.dataset.id = member.id;
+                    memberList.appendChild(memberEl);
+                });
+            } catch (error) {
+                console.error("Error loading members:", error);
+                memberList.innerHTML = '<p class="text-red-500">Error loading members.</p>';
+            }
+        }
+
+        memberList.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('member-item')) {
+                const id = e.target.dataset.id;
+                const docRef = doc(db, 'members', id);
+                const docSnap = await getDoc(docRef);
+                const memberData = docSnap.data();
+
+                if(memberData) {
+                    formTitle.textContent = "Edit Member Details";
+                    memberIdInput.value = id;
+                    document.getElementById('member-name').value = memberData.name || '';
+                    document.getElementById('member-phone').value = memberData.phone || '';
+                    document.getElementById('member-address').value = memberData.address || '';
+                    memberEmailInput.value = memberData.email || '';
+                    memberEmailInput.disabled = true;
+                    memberPasswordInput.disabled = true;
+                    memberPasswordInput.required = false;
+                    memberPasswordInput.placeholder = "Password cannot be changed here";
+                    deleteBtn.classList.remove('hidden');
+                }
+            }
+        });
+        
+        memberForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = memberIdInput.value;
+            formStatus.textContent = 'Saving...';
+            formStatus.classList.remove('text-red-500');
+
+            const memberData = {
+                name: document.getElementById('member-name').value,
+                phone: document.getElementById('member-phone').value,
+                address: document.getElementById('member-address').value,
+                email: memberEmailInput.value,
+            };
+
+            try {
+                if (id) { // Editing existing member
+                    await setDoc(doc(db, 'members', id), memberData, { merge: true });
+                    formStatus.textContent = "Member updated successfully!";
+                } else { // Creating new member
+                    const userCredential = await createUserWithEmailAndPassword(auth, memberData.email, memberPasswordInput.value);
+                    const userId = userCredential.user.uid;
+                    await setDoc(doc(db, 'members', userId), memberData);
+                    formStatus.textContent = "New member account created!";
+                }
+                loadMembers();
+                clearForm();
+            } catch (error) {
+                console.error("Error saving member:", error);
+                formStatus.classList.add('text-red-500');
+                 if (error.code === 'auth/operation-not-allowed') {
+                    formStatus.innerHTML = `<strong>Error:</strong> 'Email/Password' sign-in is not enabled in your Firebase project. Please enable it in the <strong>Authentication > Sign-in method</strong> section of the Firebase Console.`;
+                } else if (error.code === 'auth/email-already-in-use') {
+                    formStatus.textContent = "Error: This email address is already in use by another account.";
+                } else {
+                    formStatus.textContent = error.message;
+                }
+            } finally {
+                setTimeout(() => formStatus.textContent = '', 8000);
+            }
+        });
+
+        document.getElementById('clear-form-btn').addEventListener('click', clearForm);
+
+        function clearForm() {
+            formTitle.textContent = "Add New Member";
+            memberForm.reset();
+            memberIdInput.value = '';
+            memberEmailInput.disabled = false;
+            memberPasswordInput.disabled = false;
+            memberPasswordInput.required = true;
+            memberPasswordInput.placeholder = "";
+            deleteBtn.classList.add('hidden');
+        }
+        
+        deleteBtn.addEventListener('click', async () => {
+            const id = memberIdInput.value;
+            if (id && confirm(`Are you sure you want to delete this member's profile? \n\nIMPORTANT: This only deletes their profile data (name, address, etc.). For security, you must delete their login account from the Firebase Console.`)) {
+                try {
+                    await deleteDoc(doc(db, 'members', id));
+                    formStatus.textContent = "Member profile deleted.";
+                    loadMembers();
+                    clearForm();
+                } catch (error) {
+                    console.error("Error deleting member data:", error);
+                    formStatus.textContent = "Error deleting profile.";
+                }
+            }
+        });
+
     </script>
 </body>
 </html>
