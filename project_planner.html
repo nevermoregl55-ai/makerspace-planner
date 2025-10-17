@@ -212,7 +212,18 @@
         generatePlanBtn.disabled = true;
         aiPlanContainer.style.display = 'none';
 
-        const systemPrompt = `You are the "Area 59 Makerspace AI Assistant"... (rest of your detailed prompt here)`; // Placeholder for your full system prompt
+        const systemPrompt = `You are the "Area 59 Makerspace AI Assistant". Your role is to help our members plan their projects using the equipment we have available.
+        Here is the complete inventory of tools and machines available at Area 59:
+        ${JSON.stringify(inventoryData, null, 2)}
+        A user has submitted a project idea. Your tasks are:
+        1. **Analyze the project:** Based on the user's description and optional image, understand what they want to create.
+        2. **Generate a structured project plan:** Provide a detailed plan including a project name, description, estimated skill level, design considerations, required skills with proficiency, a list of materials and tools, a step-by-step plan broken into phases, and critical safety warnings.
+           - **Important:** Your safety warning must ALWAYS conclude with the sentence: "Area 59 requires all members to be trained and certified on a machine before use."
+        3. **Perform a Feasibility Analysis:** This is the most critical step. Compare the tools required for the project against the provided Area 59 inventory.
+           - Determine if the project is Fully Feasible, Partially Feasible, or Not Feasible with our equipment.
+           - Provide a clear explanation for your rating.
+           - List the key tools required and explicitly state whether each is available in our inventory. Your analysis must ONLY reference tools from the provided inventory list.
+        4. **Respond in JSON format:** Your entire response must be a single JSON object that matches the provided schema. Do not include any text or markdown formatting outside of the JSON object.`;
         
         const payloadParts = [{ text: userDescriptionInput.value.trim() }];
         if (imageBase64) {
@@ -221,7 +232,32 @@
 
         const payload = {
             contents: [{ parts: payloadParts }],
-            // ... your full system instruction and generationConfig
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "OBJECT",
+                    properties: {
+                        projectName: { type: "STRING" },
+                        projectDescription: { type: "STRING" },
+                        skillLevel: { type: "STRING", enum: ["Beginner", "Intermediate", "Advanced"] },
+                        designConsiderations: { type: "ARRAY", items: { type: "STRING" } },
+                        requiredSkills: { type: "ARRAY", items: { type: "OBJECT", properties: { skill: { type: "STRING" }, level: { type: "STRING", enum: ["Beginner", "Intermediate", "Advanced"] } } } },
+                        materials: { type: "ARRAY", items: { type: "STRING" } },
+                        tools: { type: "ARRAY", items: { type: "STRING" } },
+                        plan: { type: "ARRAY", items: { type: "OBJECT", properties: { phase: { type: "STRING" }, steps: { type: "ARRAY", items: { type: "STRING" } } } } },
+                        safetyWarning: { type: "STRING" },
+                        feasibility: {
+                           type: "OBJECT",
+                           properties: {
+                               rating: { type: "STRING", enum: ["Fully Feasible", "Partially Feasible", "Not Feasible"] },
+                               explanation: { type: "STRING" },
+                               requiredTools: { type: "ARRAY", items: { type: "OBJECT", properties: { toolName: { type: "STRING" }, available: { type: "BOOLEAN" } } } }
+                           }
+                        }
+                    }
+                }
+            }
         };
 
         try {
@@ -238,7 +274,11 @@
             }
 
             const result = await response.json();
-            const jsonText = result.candidates[0].content.parts[0].text;
+            let jsonText = result.candidates[0].content.parts[0].text;
+            
+            // **FIX:** Clean the response to remove markdown wrappers
+            jsonText = jsonText.replace(/^```json\s*/, '').replace(/```$/, '');
+            
             const planData = JSON.parse(jsonText);
             
             displayAIPlan(planData);
@@ -253,12 +293,75 @@
     }
 
     function displayAIPlan(data) {
-        // This function needs to be filled with the full rendering logic for the plan
-        // For now, it's a placeholder:
-        document.getElementById('overview').innerHTML = `<h2 class="text-2xl font-bold">${data.projectName || 'Project Plan'}</h2><p>${data.projectDescription || 'Details will appear here.'}</p>`;
-        document.getElementById('materials').innerHTML = `<p>Materials list will appear here.</p>`;
-        document.getElementById('plan').innerHTML = `<p>Step-by-step plan will appear here.</p>`;
-        document.getElementById('safety').innerHTML = `<p>Safety warnings will appear here.</p>`;
+        // --- Render Overview ---
+        const overviewContainer = document.getElementById('overview');
+        const skillColors = { "Beginner": "bg-green-100 text-green-800", "Intermediate": "bg-yellow-100 text-yellow-800", "Advanced": "bg-red-100 text-red-800" };
+        
+        overviewContainer.innerHTML = `
+            <h2 class="text-3xl font-bold">${data.projectName}</h2>
+            <p>${data.projectDescription}</p>
+            
+            ${inventoryData ? `
+            <div class="p-4 rounded-lg bg-slate-100 border border-slate-200">
+                <h3 class="text-xl font-semibold mb-3">Feasibility at Area 59</h3>
+                <p class="mb-1"><span class="font-bold">Rating:</span> ${data.feasibility.rating}</p>
+                <p class="mb-4">${data.feasibility.explanation}</p>
+                <h4 class="font-semibold mb-2">Key Equipment Check:</h4>
+                <ul class="space-y-1">
+                    ${(data.feasibility.requiredTools || []).map(t => `
+                        <li class="flex items-center gap-2">${t.available ? '<span class="text-green-500">✔</span>' : '<span class="text-red-500">✖</span>'} ${t.toolName}</li>
+                    `).join('')}
+                </ul>
+            </div>` : ''}
+
+            <div class="p-4 rounded-lg bg-slate-100 border border-slate-200">
+                 <h3 class="text-xl font-semibold mb-2">Details</h3>
+                 <p><span class="font-bold">Overall Skill Level:</span> <span class="skill-badge ${skillColors[data.skillLevel] || ''}">${data.skillLevel}</span></p>
+            </div>
+
+            <div class="p-4 rounded-lg bg-slate-100 border border-slate-200">
+                <h3 class="text-xl font-semibold mb-2">Required Skills</h3>
+                <div class="flex flex-wrap gap-2">
+                    ${(data.requiredSkills || []).map(s => `<span class="skill-badge ${skillColors[s.level] || ''}">${s.skill} (${s.level})</span>`).join('')}
+                </div>
+            </div>
+
+            <div class="p-4 rounded-lg bg-slate-100 border border-slate-200">
+                <h3 class="text-xl font-semibold mb-2">Design Considerations</h3>
+                <ul class="list-disc list-inside space-y-1">${(data.designConsiderations || []).map(c => `<li>${c}</li>`).join('')}</ul>
+            </div>
+        `;
+        
+        // --- Render Materials & Tools ---
+        const materialsContainer = document.getElementById('materials');
+        materialsContainer.innerHTML = `
+            <div>
+                <h3 class="text-2xl font-semibold mb-2">Materials</h3>
+                <ul class="list-disc list-inside space-y-1">${(data.materials || []).map(m => `<li>${m}</li>`).join('')}</ul>
+            </div>
+            <div>
+                <h3 class="text-2xl font-semibold mb-2">Tools</h3>
+                <ul class="list-disc list-inside space-y-1">${(data.tools || []).map(t => `<li>${t}</li>`).join('')}</ul>
+            </div>
+        `;
+
+        // --- Render Plan ---
+        const planContainer = document.getElementById('plan');
+        planContainer.innerHTML = (data.plan || []).map(phase => `
+            <div>
+                <h3 class="text-2xl font-semibold mb-2">${phase.phase}</h3>
+                <ol class="list-decimal list-inside space-y-2">${(phase.steps || []).map(step => `<li>${step}</li>`).join('')}</ol>
+            </div>
+        `).join('<hr class="my-6">');
+        
+        // --- Render Safety ---
+        const safetyContainer = document.getElementById('safety');
+        safetyContainer.innerHTML = `
+            <div class="p-4 rounded-lg bg-red-50 border border-red-200">
+                <h3 class="text-2xl font-semibold text-red-800 mb-2">⚠️ Safety Warning</h3>
+                <p class="text-red-700">${data.safetyWarning}</p>
+            </div>
+        `;
         
         aiPlanContainer.style.display = 'block';
         setupTabs();
