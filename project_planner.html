@@ -12,25 +12,21 @@
             background-position: center;
             background-attachment: fixed;
         }
-        .content-panel {
-            background-color: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+        .content-panel, .settings-panel {
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
         }
-         #ai-plan-container, #settings-modal { display: none; }
+        #ai-plan-container, #settings-modal { display: none; }
         .tab-button {
             padding: 0.75rem 1.5rem;
             border-radius: 0.5rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease-in-out;
-            background-color: rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.4);
         }
         .tab-button.active {
-            background-color: #2563eb; /* blue-600 */
+            background-color: #2563eb;
             color: white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -44,6 +40,7 @@
             justify-content: center;
             background-color: rgba(255, 255, 255, 0.2);
             overflow: hidden;
+            cursor: pointer;
         }
         .image-preview-container img {
             width: 100%;
@@ -63,7 +60,7 @@
 
     <!-- Settings Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg p-8 w-full max-w-lg space-y-4">
+        <div class="settings-panel rounded-2xl shadow-lg p-8 w-full max-w-lg space-y-4">
             <h2 class="text-2xl font-bold text-slate-900">Settings</h2>
             <div>
                 <label for="api-key-input" class="block text-sm font-medium text-slate-700">Google AI API Key</label>
@@ -79,7 +76,7 @@
 
     <div class="container mx-auto max-w-5xl p-4 sm:p-6 md:p-8">
         <header class="text-center mb-8 relative p-6 rounded-xl content-panel shadow-md">
-            <img src="Area_59_Logo_Color_3x1.png" alt="Area 59 Logo" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-32 opacity-50">
+            <a href="index.html"><img src="Area_59_Logo_Color_3x1.png" alt="Area 59 Logo" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-24 opacity-40 pointer-events-none"></a>
             <div class="relative">
                 <h1 class="text-4xl font-bold text-slate-900">AI Project Planner</h1>
                 <p class="text-slate-700 mt-2 max-w-3xl mx-auto">Welcome to the Area 59 AI Project Planner! Describe your project idea, upload an optional image, and our AI will generate a comprehensive plan tailored to the tools and equipment available in our makerspace.</p>
@@ -102,7 +99,6 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="md:col-span-2 space-y-4">
                     <h2 class="text-2xl font-semibold">Describe Your Project</h2>
-                    <p class="text-slate-600">Be as descriptive as possible. What do you want to make? What materials will you use? The more detail you provide, the better the plan will be.</p>
                     <textarea id="user-description-input" rows="8" class="w-full p-3 rounded-lg border border-slate-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., I want to build a small bookshelf out of plywood..."></textarea>
                 </div>
                 <div class="space-y-4 flex flex-col items-center">
@@ -122,8 +118,7 @@
 
         <!-- AI Plan Display -->
         <div id="ai-plan-container" class="mt-8 content-panel p-8 rounded-xl shadow-lg">
-            <!-- Tabs -->
-            <div class="flex flex-wrap gap-2 mb-6 border-b border-slate-300 pb-4">
+             <div class="flex flex-wrap gap-2 mb-6 border-b border-slate-300 pb-4">
                 <button class="tab-button active" data-tab="overview">Overview</button>
                 <button class="tab-button" data-tab="materials">Materials & Tools</button>
                 <button class="tab-button" data-tab="plan">Step-by-Step Plan</button>
@@ -164,9 +159,18 @@
         checkGenerateButtonState();
     });
 
-    async function loadInventory() { /* ... same as before ... */ }
+    async function loadInventory() {
+        try {
+            const response = await fetch(`inventory.json`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            inventoryData = await response.json();
+        } catch (error) {
+            console.error("Failed to load inventory:", error);
+            inventoryErrorBanner.classList.remove('hidden');
+            inventoryData = null;
+        }
+    }
 
-    // --- Event Listeners ---
     document.getElementById('open-settings-btn').addEventListener('click', () => settingsModal.style.display = 'flex');
     document.getElementById('cancel-settings-btn').addEventListener('click', () => settingsModal.style.display = 'none');
     document.getElementById('save-settings-btn').addEventListener('click', () => {
@@ -176,23 +180,103 @@
             settingsModal.style.display = 'none';
             apiKeyBanner.classList.add('hidden');
             checkGenerateButtonState();
+            statusMessage.textContent = "API Key saved successfully!";
+            setTimeout(() => statusMessage.textContent = '', 3000);
         }
     });
 
     uploadButton.addEventListener('click', () => imageUploadInput.click());
     imagePreview.addEventListener('click', () => imageUploadInput.click());
-    imageUploadInput.addEventListener('change', (event) => { /* ... same as before ... */ });
-    userDescriptionInput.addEventListener('keyup', checkGenerateButtonState);
+
+    imageUploadInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imageBase64 = e.target.result.split(',')[1];
+                imagePreview.innerHTML = `<img src="${e.target.result}" alt="Project preview">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    userDescriptionInput.addEventListener('input', checkGenerateButtonState);
     generatePlanBtn.addEventListener('click', generatePlan);
 
-    // --- Core Functions ---
     function checkGenerateButtonState() {
         generatePlanBtn.disabled = !userDescriptionInput.value.trim() || !apiKey;
     }
 
-    async function generatePlan() { /* ... same as before, but it will use the apiKey variable from the new user-input system ... */ }
-    function displayAIPlan(data) { /* ... same as before ... */ }
-    function setupTabs() { /* ... same as before ... */ }
+    async function generatePlan() {
+        statusMessage.textContent = 'Generating plan... This may take a moment.';
+        generatePlanBtn.disabled = true;
+        aiPlanContainer.style.display = 'none';
+
+        const systemPrompt = `You are the "Area 59 Makerspace AI Assistant"... (rest of your detailed prompt here)`; // Placeholder for your full system prompt
+        
+        const payloadParts = [{ text: userDescriptionInput.value.trim() }];
+        if (imageBase64) {
+            payloadParts.push({ inlineData: { mimeType: "image/jpeg", data: imageBase64 } });
+        }
+
+        const payload = {
+            contents: [{ parts: payloadParts }],
+            // ... your full system instruction and generationConfig
+        };
+
+        try {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json();
+                throw new Error(errorBody.error?.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            const jsonText = result.candidates[0].content.parts[0].text;
+            const planData = JSON.parse(jsonText);
+            
+            displayAIPlan(planData);
+            statusMessage.textContent = 'Plan generated successfully!';
+
+        } catch (error) {
+            console.error('Error generating plan:', error);
+            statusMessage.textContent = `Error: ${error.message}`;
+        } finally {
+            generatePlanBtn.disabled = false;
+        }
+    }
+
+    function displayAIPlan(data) {
+        // This function needs to be filled with the full rendering logic for the plan
+        // For now, it's a placeholder:
+        document.getElementById('overview').innerHTML = `<h2 class="text-2xl font-bold">${data.projectName || 'Project Plan'}</h2><p>${data.projectDescription || 'Details will appear here.'}</p>`;
+        document.getElementById('materials').innerHTML = `<p>Materials list will appear here.</p>`;
+        document.getElementById('plan').innerHTML = `<p>Step-by-step plan will appear here.</p>`;
+        document.getElementById('safety').innerHTML = `<p>Safety warnings will appear here.</p>`;
+        
+        aiPlanContainer.style.display = 'block';
+        setupTabs();
+    }
+
+    function setupTabs() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                tabContents.forEach(content => content.classList.remove('active'));
+                document.getElementById(button.dataset.tab).classList.add('active');
+            });
+        });
+    }
 
 </script>
 </body>
